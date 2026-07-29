@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e93cf4bac438ef64ea7572bc6fe5dabe, type: 3}
+  m_Name: cube
+  m_EditorClassIdentifier: 
+  _name: Cube
+  _itemCode: 01
+  _spacialDefinition:
+  - {x: 0, y: 0}
+  _itemHandle: {x: 0, y: 0}
+  _desc: A solid block with polished faces. Its edges are smooth to the touch
+  _sprite: {fileID: 21300000, guid: d3f8060a6322b924ca989b59e578e76f, type: 3}
+  _stackLimit: 5
+  _value: 3
+  _onPickUpAudio: {fileID: 8300000, guid: 7abccce1359ba0d4a8421bcc212783c5, type: 3}
+  _onDropAudio: {fileID: 8300000, guid: e8af9035f5758f44da37af4225a02619, type: 3}
+  _isUsable: 1
+  _isBulkUseEnabled: 1
+  _isDiscardable: 1
+  _isOrganizable: 1
+  _isSellable: 1
