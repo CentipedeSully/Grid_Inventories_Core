@@ -20,11 +20,13 @@ namespace dtsInventory
         Remove
     }
 
+    [Serializable]
     public struct InvContentsUpdate
     {
         public InvOperation operation;
         public ItemData itemData;
         public int amount;
+
 
         public InvContentsUpdate(ItemData itemTypechanged, int changeAmount, InvOperation operationThatHappened)
         {
@@ -58,8 +60,12 @@ namespace dtsInventory
         //events
         public delegate void InvContentsChangedEvent(InvContentsUpdate update);
         public delegate void BulkInvContentsChangedEvent(List<InvContentsUpdate> updates);
+        public delegate void InvGridEvent();
+        public delegate void InvGridResizedEvent(Vector2 newDimensions);
         public event InvContentsChangedEvent OnContentsChanged;
         public event BulkInvContentsChangedEvent OnBulkContentsChanged;
+        public event InvGridEvent OnGridDestroyed;
+        public event InvGridResizedEvent OnGridResized;
 
 
 
@@ -224,6 +230,10 @@ namespace dtsInventory
         {
             if (_isDebugActive)
                 ListenForDebugCommands();
+        }
+        private void OnDestroy()
+        {
+            OnGridDestroyed?.Invoke();
         }
 
 
@@ -2559,6 +2569,8 @@ namespace dtsInventory
                 StartCoroutine(_textUpdater);
             }
 
+            OnGridResized?.Invoke(_containerSize);
+
         }
 
         /// <summary>
@@ -2641,6 +2653,8 @@ namespace dtsInventory
                 _textUpdater = RepositionTextAtEndOfFrame();
                 StartCoroutine(_textUpdater);
             }
+
+            OnGridResized?.Invoke(_containerSize);
 
         }
 

@@ -1296,6 +1296,8 @@ GameObject:
   m_Component:
   - component: {fileID: 6507167264769772019}
   - component: {fileID: 7768827273871646501}
+  - component: {fileID: 8377175759222511348}
+  - component: {fileID: 8377175759222511349}
   - component: {fileID: 3266470727919037553}
   - component: {fileID: 7965326080197102745}
   - component: {fileID: 7786372428621991376}
@@ -1306,6 +1308,63 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
+--- !u!114 &8377175759222511348
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8377175759222511347}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dd7b2fb4160ff48478765ca3499b3ff0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  OnItemAdded:
+    m_PersistentCalls:
+      m_Calls: []
+  OnItemRemoved:
+    m_PersistentCalls:
+      m_Calls: []
+  OnBulkOperationOccured:
+    m_PersistentCalls:
+      m_Calls: []
+  OnGridDestroyImminent:
+    m_PersistentCalls:
+      m_Calls: []
+  OnGridResized:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 4708429464789771770}
+        m_TargetAssemblyTypeName: dtsInventory.GridPreviewVisualizer, Assembly-CSharp
+        m_MethodName: ResizeToMaxSize
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+  _logSubscriptionStatus: 1
+  _logEvents: 1
+--- !u!114 &8377175759222511349
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8377175759222511347}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 86c0e2800be84c340b3725b385b00394, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _isDebugActive: 0
+  _gridToTest: {fileID: 0}
+  _paramOperationsList: []
+  _cmdRaiseBulkOperationEvent: 0
 --- !u!224 &8463427159485444431
 RectTransform:
   m_ObjectHideFlags: 0
