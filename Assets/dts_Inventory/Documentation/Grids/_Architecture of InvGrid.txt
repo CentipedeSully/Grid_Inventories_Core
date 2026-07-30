@@ -1,0 +1,90 @@
+Architecture of the InvGrid
+
+
+= The Problem =
+
+The desired structure resembles a system that can do the following quickly and easily:
+ o Organize items VISUALLY within a container
+ o Store items by cell placement, even if they're of varying size
+ o Retrieve items by cell position & item type
+ o Query items by cell position & item type
+
+
+
+
+= This Solution =
+
+
+- Script 'InvGrid' structure
+-----------------------------------------------
+The InvGrid class is primarily composed of a collection of dictionaries [a quick-lookup, key:value-structured data collection].
+
+When an item is stored onto the grid, the item's predefined size (in cells) and structure is converted into local cell positions
+on the grid. Then that collection of local grid positions (saved as a 'set' data type) is saved as a KEY for numerous internal
+dictionaries. calculated set of local grid positions will be referred to as the item's 'stack area' (as in 
+"where this unique stack exists on the grid").
+
+These dictionaries are the folling:
+ o The 'ItemData' Dictionary: This correlates the stored item's ItemData to its calculated stack area.
+ o The 'Value' Dictionary: This correlates the stored amount the given item to its calculated stack area. Basically it tracks the stack's size.
+ o The 'Text' Dictionary: This correlates TMPro text objects to each stack area. These provide visual, numerical feedback for each stack.
+ o The 'Sprite' Dictionary: This correlates the item's ACTUAL GAMEOBJECT (the UiGraphic and attached InvItem Script) to its calcualted stack area.
+ o The 'Cells' Dictionary: This correlates every single grid position to its respective cell gameObject.
+
+By structuring the grid this way, queries can be conveniently requested and cross-referenced to provide quick-and-clear placement information.
+
+
+- GameObject structure
+---------------------------------------------
+Grid gameobjects are designed as a Ui 'cake' (forgive the metaphor). Here's the order of layering. Keep in mind that in Unity, the objects that
+show up 'on Top' visually are the bottom-most objects:
+
+
+= Grid (Parent) Container =
+o (VERY BOTTOM)(Inspector Preview) Preview container
+o (Bottom) Grid container
+o Item Graphics container
+o Stack Texts container
+o pooled texts container (keep this deactivated)
+o (Top) Auxillary Overlay container
+
+
+- The Preview container holds 2 things; the grid's border graphic and a placeholder for the cells area. This container is 
+responsible for visualizing InvGrid's size. It's driven by the "GridPreviewVisualizer" script (Located on the Parent container by default),
+which reads the InvGrid to infer its expected size. 
+
+You can resize the preview anytime by rClicking the GridPreviewVisualizer -> "Update Preview".
+
+- The Grid container holds the core InvGrid script along with other support scripts. OnStart, the InvGrid creates a collection of children
+gameobjects that serve as visual cells (each cell object also contains a CellInteract script; useful primarily to detect pointer 
+hovering & drive pointer interaction). Do not manipulate this layer of the cake. Each child's placement is deliberate, and you'll
+confuse the grid if you reorder the cells-- especially if you attempt to expand/reduce the grid's size. 
+
+- The Item Graphics container holds collected InvItems. These items are methodically placed onto the grid based on the item's size and
+rotation (and placement offset). It's also recommended that you don't modify this layer, else you'll risk visual-inconsistency related
+issues when interacting with the grid. You can probably get away with adding additional gameobjects here though. The grid doesn't rely
+on gameObject hierarchy in this container like it does in the Grid container.
+
+You certainly shouldn't be deleting items from this layer though. Call the Grid's 'RemoveItem' method to do this. Destroying items without using
+'RemoveItem' will result in zombie items existing in the grid-- you only deleted the item's graphic (And more, actually. The Grid 
+references that gameObject's 'InvItem' script, too. You'll definitely see Red Errors if you attempt to query that area).
+
+- The Stack Texts container holds every stack's numerical display. You need this to show the values of each stack. Treat this layer just like
+how you'd treat the previously-mentioned Item Graphics container. Adding gameobjects is probably fine, but deleting them is not.
+
+- The pooled texts container holds deactivated text objects. This container could theoretically exist anywhere in the cake. It should
+always be deactivated, so it won't matter. Just make sure it exists, else the text objects won't recycle properly. Do not add any gameobjects
+to this container. Every gameObject here is assumed to be a deactivated text object.
+
+- The Auxillary container exists for you. If you want to add overlay effects (visual dimming effects, for example), then you can put them here.
+Otherwise, this layer doesn't do anything. You may delete it if you wish.
+
+
+
+* More on the layer containers
+OnStart, every container is resized to fit the grid. It's very important for each container to match the grid's size,
+otherwise graphics wont align properly. If you choose to add more layers (you're more than welcomed to), you may need to
+ensure your layers also resize to match the Parent container's size. 
+
+Also, you may notice that in the editor the layers don't actually match the preview. They'll be resized by the InvGrid OnStart.
+
