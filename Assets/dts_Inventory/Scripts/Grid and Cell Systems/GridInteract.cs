@@ -23,7 +23,7 @@ namespace dtsInventory
         {
             if (_grid != null)
             {
-                //InvManagerHelper.SetActiveItemGrid(_grid);
+                InteracterHelper.SetGridAsHovered(_grid);
             }
 
         }
@@ -32,7 +32,7 @@ namespace dtsInventory
         {
             if (_grid != null)
             {
-                //InvManagerHelper.LeaveGrid(_grid);
+                InteracterHelper.ClearGrid();
             }
 
         }

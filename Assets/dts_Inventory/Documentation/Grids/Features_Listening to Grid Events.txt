@@ -1,0 +1,38 @@
+Listening to Grid Events
+
+
+By default InvGrids have the following (publicly-accessible) internal events
+ 
+ o OnContentsChanged
+   - Happens when items are added/removed from the grid (if not suppressed).
+   > Provides the itemData affected, the amount that changed, and the specific operation [add/remove] as an 'InvContentsUpdate' struc.
+ 
+ o OnBulkContentsChanged
+   - Doesn't happen by default. Must be manually triggered. Useful if you want to trigger consecutive content changes
+     as a single batched event.
+   > Provides a list of individual 'InvContentsUpdate' structs; each one representing a successful operation made.
+ 
+ o OnGridResized
+   - Happens when the grid gets resized.
+   > Provides the grid's new dimensions.
+
+ o OnGridDestroyed
+   - Happens when the InvGrid instance enters its OnDestroy monobehaviour method.
+   > Provides a reference to the grid being destroyed. Gives you a final opportunity to unsub your scripts
+     (if appicable)
+
+You may freely subscribe to these events to better customize your UI/UX. These internals are best used if you
+need to sub/unsub during runtime (with dynamically created clones, for example).
+
+If you'd instead prefer to subscribe to UnityEvents via the inspector, you may instead attach your desired methods
+to the 'InvGridEventListener' script's exposed UnityEvents. This component exists on the same object as the InvGrid
+component by default, and it listens for the above-mentioned InvGrid events, and responds to them by raising the 
+respective UnityEvent.
+
+Keep in mind that if you subscribe a method to both the InvGrid's internal events AND the InvGridEventListener's events,
+that method will be doubling its responses- once from each event source.
+
+
+Also, there exists a debug script named "BulkOperationEventTester" attached to the same object as the InvGrid and InvGridEventListener.
+It's purpose it to help test if the bulkOnChanged event is working properly. If you don't need to use it, you may remove it.
+Regardless, it wil not run unless you enable it's 'isDebugActive' property; it will not act unless that setting is toggled on.

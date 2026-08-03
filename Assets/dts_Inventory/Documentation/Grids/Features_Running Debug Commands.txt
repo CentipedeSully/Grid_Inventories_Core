@@ -1,0 +1,53 @@
+Running Debug Commands
+
+
+In many of the provided scripts, there exists a 'Debug' section. You're more than welcomed to explore
+the section and try triggering commands to see how everything works. 
+
+Keep in mind that in most cases you'll need to first enable the "isDebugActive" parameter before
+you can use the commands-- most components default to the debug mode set to off to improve performance.
+
+
+
+Debug Terminology: "Cmd"s , "Param"s , and "Settings"
+--------------------------------------
+
+In most debug sections, the properties have a prefix which states their role/purpose at a glance.
+Here are the different categories:
+
+ o Cmd => "Command" 
+   - These are single-click properties that trigger an internal method/feature. These may or may not
+     be guided by a nearby "param" property. Hovering over each Command should tell you if it's
+     driven by a specific parameter.
+   - These are your primary method for debugging the given scripts. You may add more if you wish.
+
+ o Param => "Parameter"
+   - These are the various parameters that the local commands will use (if applicable) to test
+     specific cirumstances. You may set these to whatever you wish to find the limitations of the
+     given utilities. Note that each parameter should mention which command(s) it influences when
+     you hover over the property.
+
+ o Setting
+   - These properties in general change how the debug commands function. These appear rarely, but each
+     setting property will tell you exactly what commands it changes when you hover over the property.
+
+
+
+Debugging tips and warnings
+-------------------------------------------
+
+Sometimes a debug method may throw a warning if you pass extremely invalid parameters (ex. emtpy or NULL paramters).
+
+In these cases, the debug command caught a bad parameter that may break the utility, (which is a good thing).
+But what if, later in the application, the APPLICATION gives the same extremely-invalid parameter somehow?
+
+In this case, the debug command isn't there to throw the warning, and the issue may or may not be caught by the executing script.
+The uncaught cases may cause red errors.
+
+
+During development, 
+In General, do your best to always check if your giving safe parameters to methods. Some scripts may catch the bad-parameter
+errors, but thay may vary from script to script.
+
+I did my best to anticipate poor parameters with most of the utilities, but there may be gaps in some unexpected cases.
+If you happen across any, please reach out to me so I can remedy the specific cases.

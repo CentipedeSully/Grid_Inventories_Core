@@ -1,0 +1,40 @@
+> Creating Items
+  1) Create the item asset in your project files [right-click > create > itemData]
+
+  2) Customize the item to you needs
+     - Draw your sprite: 
+       1 cell is (by default) 32x32 pixels. So a 4x1 item's sprite would be 128x32 pixels.
+       You may change the cell size of each grid, and the system will do its best to resize your item's rectTransform
+       to fit each grid's cell size. (If the default cellSize limitation of 32x32 proves to be an issue, I'll implement
+       support for greater resolution sprites)
+     
+     - Define the item's spacial definition: 
+       A 4x1 item is a horizontal row of 4 cells. For simplicity, we could imagine that item's cells being referenced as
+       (0,0), (1,0), (2,0), & (3,0) -- keeping the bottomLeft of the item/s cells at (0,0). This 'spacial definition' 
+       tells the system the exact item's shape, and which cells live where in relation to each other.
+     
+     - Define the item handle:
+       The item handle of an item represents where the item will be centered when picked up and placed. Rotations happen
+       around the item handle, and when the item is placed on the grid the item handle is placed on the grid first, then
+       the item's spacial definition is projected around the itemHandle onto the selected grid space (assuming the item 
+       fits).
+
+     - Define an item code:
+       This should be unique to this item. NO ither itemData should share this code. This code allows the grid to compare
+       items-- if both items share the same itemcode, then they're both considered instances of the same item.
+
+     - Stack limit:
+       This defines how many of this item may be kept in the same position. 
+       
+     - Audio Cues:
+       Setting these alone does nothing at the moment. If you already have a way to interact with the grid, you can set these
+       to provide audio cues whenever that item in question is picked up or placed.
+
+     - Everything else is game flavor, and may be changed, repurposed, or deleted based on you project's needs
+
+  3) Add the new item to the ItemCreator's ItemList. In the Inventory Scene its located on the 'Inventory UI' gameObject by default.
+     Alternatively, the ItemCreator script may exist anywhere in the scene (it must exist in the scene, else grids won't be able to
+     create new InvItems for themselves). Only 1 ItemCreator should exist in the scene.
+
+
+  4) Call 'AddItem' using your new item on an InvGrid. If there's enough space for the item, it'll be created and added to the grid!

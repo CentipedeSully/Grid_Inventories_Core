@@ -578,6 +578,13 @@ namespace dtsInventory
             if (stackArea.Count <= 0)
                 return;
 
+            //ensure the cells clear their stored item
+            foreach (KeyValuePair<(int, int), CellInteract> entry in _cellInteractCollection)
+            {
+                if (stackArea.Contains(entry.Key))
+                    _cellInteractCollection[entry.Key].SetInvItem(null);
+            }
+
 
             _stackCapacities.Remove(stackArea);
             _stackItemDatas.Remove(stackArea);
@@ -676,6 +683,13 @@ namespace dtsInventory
             _stackCapacities.Add(expectedGridOccupancy, stackAmount);
             _stackSpriteObjects.Add(expectedGridOccupancy, item);
             _stackTexts.Add(expectedGridOccupancy, uiText);
+
+            //ensure the cells know what they're storing
+            foreach (KeyValuePair<(int,int),CellInteract> entry in _cellInteractCollection)
+            {
+                if (expectedGridOccupancy.Contains(entry.Key))
+                    _cellInteractCollection[entry.Key].SetInvItem(item);
+            }
 
             PositionItemGraphicOntoGridVisually(position, item);
 
@@ -1131,6 +1145,7 @@ namespace dtsInventory
         {
             if (IsCellOnGrid(index))
             {
+                //Debug.Log($"Detected Stack inferred from position '({index.Item1},{index.Item2})':\n " + StringifyPositions(StackArea(index)));
                 if (_stackSpriteObjects.ContainsKey(StackArea(index)))
                     return _stackSpriteObjects[StackArea(index)];
             }

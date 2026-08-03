@@ -1,0 +1,65 @@
+Adding and Removing Items
+
+
+Adding Items to a grid
+------------------------------------
+You add items to the grid by calling the InvGrid's AddItem method.
+
+You may either generally AddItem to the grid without giving a specific position (which adds a stack of items anywhere they'll fit),
+or you may specify a specific position and orientation to place the item. The method signatures are below;
+
+ 1) public bool AddItem(ItemData itemData, int amount, bool suppressOnChangedEvent = false)
+    > This method adds an amount of a single item anywhere on the grid. Useful for populating grids autonomously.
+
+ 2) public bool AddItem(ItemData itemData, int amount, (int,int) position, ItemRotation rotation, bool suppressOnChangedEvent = false)
+    > This method adds an amount of a single item to A SPECIFIC POSITION [and orientation]. Useful as the player's means of organizing their
+      inventories. Note that every item's rotation may be calculated from the specific item's item data. Spawned InvItems are rotatable
+      out-of-the-box.
+
+
+The 'suppressOnChangedEvent' is defaulted to false. This parameter tells the grid whether or not the operation should raise an event.
+If the parameter is TRUE, then the event WILL BE SUPPRESSED. You can suppress both add/remove operations as you seem fit.
+
+If you want to perform a batch of operations, but only raise a single event in response to that batch of operations, you'll need to
+suppress each individual operation's OnChangedEvent, then [after all your operations are executed] manually raise the 
+'ForceRaiseBulkInvContentsChanged' public method; this method raises an event that gives a list of all the changes.
+
+Method signature: 
+ - public void ForceRaiseBulkInvContentsChanged(List<(ItemData, int, InvOperation)> operationsList)
+
+ note: 'InvOperation' is an enum. Default values are {None, Add, Remove}
+
+
+
+Removing Items from a grid
+----------------------------------------
+You remove items from the grid similarly to how you add them. Via the RemoveItem method.
+
+Here are your options;
+
+ 1) public bool RemoveItem((int, int) position, int amount, bool suppressOnChangedEvent = false)
+    > This method removes an amount of WHATEVER is at the target grid position. Useful when you already know what's where.
+
+ 2) public bool RemoveItem(string itemCode, int amount, bool suppressOnChangedEvent = false)
+    > This method removes an amount of items that match the given itemCode (from anywhere in the grid). Useful for automation.
+      ItemCodes are defined by you in the itemData when you create the item.
+
+ 3) public bool RemoveItem(ItemData itemData, int amount, bool suppressOnChangedEvent = false)
+    > Similar to the earlier method, but uses specific ItemData instead of itemCode.
+
+
+
+
+Failed Operations
+--------------------------------------
+Add/Remove operations will fail if there's either not enough space to complete the operation, or the requested items 
+don't exist in the grid. When an operation fails, it'll return false.
+
+Failed operations don't raise any events by default (They'll throw debug warnings, though).
+
+You should only add/remove items YOU KNOW exist in the grid. Don't assume or guess. See QueryingItems to
+see how to access grid data.
+
+
+Operations may also fail if the scene's ItemCreator doesn't have your itemData in its itemList. To fix this case,
+simply ensure you items are added to the ItemCreator's itemList before runtime.

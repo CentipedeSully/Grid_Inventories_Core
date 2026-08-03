@@ -14,7 +14,6 @@ The desired structure resembles a system that can do the following quickly and e
 
 = This Solution =
 
-
 - Script 'InvGrid' structure
 -----------------------------------------------
 The InvGrid class is primarily composed of a collection of dictionaries [a quick-lookup, key:value-structured data collection].

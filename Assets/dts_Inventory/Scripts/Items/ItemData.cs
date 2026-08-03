@@ -32,6 +32,7 @@ namespace dtsInventory
         [Tooltip("What sound will play when the item is placed into another cell")]
         [SerializeField] private AudioClip _onDropAudio;
 
+        /*
         [Header("Possible UI Options")]
         [Tooltip("Should this item show the 'use' context within the inventory")]
         [SerializeField] private bool _isUsable;
@@ -43,7 +44,7 @@ namespace dtsInventory
         [SerializeField] private bool _isOrganizable;
         [Tooltip("Should this item show the 'sell' context within the inventory")]
         [SerializeField] private bool _isSellable;
-
+        */
 
 
 
@@ -168,8 +169,8 @@ namespace dtsInventory
 
         public AudioClip OnPickupAudioClip() { return _onPickUpAudio; }
         public AudioClip OnDropAudioClip() { return _onDropAudio; }
-        public bool IsBulkUseEnabled() { return _isBulkUseEnabled; }
-        public bool IsSellable() {  return _isSellable; }
+        //public bool IsBulkUseEnabled() { return _isBulkUseEnabled; }
+        //public bool IsSellable() {  return _isSellable; }
         public int ItemValue() { return _value; }
     }
 

@@ -1,0 +1,54 @@
+Finding Space for Items
+
+
+The player will be able to visually see how much space is available, but (as a dev) you wont.
+
+There exists methods to help you determine whether or not an inventory has space for an item
+(or list of items).
+
+ - Method Signature: List<ItemQueryResponse> FindSpaceForItems(List<ItemQuery> queryList)
+
+
+The above method should be your primary tool for finding space in any grid container. It
+iteratively checks the grid if an item can fit anywhere, at any rotation. It sounds
+like a complicated algorithm, and it is. Be careful using this on very large grids
+with very long item lists, because this can reduce your project's performance.
+
+
+If not enough space exists for EVERY REQUESTED QUERY, then the method will return null.
+Otherwise, the method will return a list of the exact placement data for every item that was requested.
+
+Here's the structure of a single ItemQueryResponse. The method often returns a LIST of these.
+
+*****
+public struct ItemQueryResponse
+{
+    public ItemData itemData;
+    public (int,int) placementPosition;
+    public ItemRotation placementRotation;
+    public HashSet<(int, int)> reservedPositions;
+    public int availableCapacity;
+
+    public ItemQueryResponse(ItemData data, (int,int) targetPosition, int capacity,HashSet<(int,int)> fullStackPosition, ItemRotation necessaryRotation)
+    {
+        itemData = data;
+        placementPosition = targetPosition;
+        placementRotation = necessaryRotation;
+        availableCapacity = capacity;
+
+        reservedPositions = new();
+        foreach ((int,int) position in fullStackPosition)
+            reservedPositions.Add(position);
+    }
+}
+*****
+
+If the method returns something that isn't null, then you sould be safe to iterate through your new response list 
+and add everything to the grid. The method attempts to fill compatible stacks before creating new ones.
+
+
+ *note: Other public, similarly-named methods exist in the InvGrid class, too. Generally, you might not need them directly, but you can
+        use them if you find any of them valuable. Be sure not to change them, though. The signature is recursive, and calls the other methods
+        help itself perform its job. Changing the smaller methods might have cause unintended ripple effects.
+
+

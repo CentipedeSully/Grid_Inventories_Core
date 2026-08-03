@@ -26,12 +26,12 @@ namespace dtsInventory
         //Interface
         public void OnPointerEnter(PointerEventData eventData)
         {
-            
+            InteracterHelper.SetCellAsHovered(this);
         }
 
         public void OnPointerExit(PointerEventData eventData)
         {
-            
+            InteracterHelper.ClearCell();
         }
 
 
@@ -43,7 +43,7 @@ namespace dtsInventory
         public InvItem Item() { return _item; }
         public void SetIndex((int, int) newIndex) { _index = newIndex; }
         public void SetGrid(InvGrid newGrid) { _grid = newGrid; }
-        public void SetItem(InvItem item) { _item = item; }
+        public void SetInvItem(InvItem item) { _item = item; }
 
 
     }

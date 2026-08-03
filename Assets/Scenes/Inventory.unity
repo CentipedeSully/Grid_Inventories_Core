@@ -131,8 +131,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 396664318}
-  - component: {fileID: 396664322}
   - component: {fileID: 396664324}
+  - component: {fileID: 396664322}
+  - component: {fileID: 396664325}
   m_Layer: 5
   m_Name: Inventory Ui
   m_TagString: Untagged
@@ -181,16 +182,52 @@ MonoBehaviour:
       m_Calls: []
   OnPointerPositionChanged:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 396664325}
+        m_TargetAssemblyTypeName: dtsInventory.GridInteracter, Assembly-CSharp
+        m_MethodName: SetMousePosition
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
   OnPointerScroll:
     m_PersistentCalls:
       m_Calls: []
   OnLclick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 396664325}
+        m_TargetAssemblyTypeName: dtsInventory.GridInteracter, Assembly-CSharp
+        m_MethodName: PinHoveredStackToMouse
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
   OnRclick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 396664325}
+        m_TargetAssemblyTypeName: dtsInventory.GridInteracter, Assembly-CSharp
+        m_MethodName: PlacePinnedStackToHoveredCell
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
   OnMclick:
     m_PersistentCalls:
       m_Calls: []
@@ -202,10 +239,34 @@ MonoBehaviour:
       m_Calls: []
   OnLeftAction:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 396664325}
+        m_TargetAssemblyTypeName: dtsInventory.GridInteracter, Assembly-CSharp
+        m_MethodName: RotateCounterClockwise
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
   OnRightAction:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 396664325}
+        m_TargetAssemblyTypeName: dtsInventory.GridInteracter, Assembly-CSharp
+        m_MethodName: RotateClockwise
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
   OnConfirm:
     m_PersistentCalls:
       m_Calls: []
@@ -250,6 +311,26 @@ MonoBehaviour:
   - {fileID: 11400000, guid: ea50991f2c3a1c84da06961a8df57956, type: 2}
   - {fileID: 11400000, guid: 6b72718622493c742a13bbefabd1bda6, type: 2}
   - {fileID: 11400000, guid: 9ed031f30ac9eaf43916d9c3810d1d6e, type: 2}
+--- !u!114 &396664325
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 396664317}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aec554bdf347f9043beb88e2a48c1b20, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _pointerContainer: {fileID: 1910391120}
+  _pinnedRectTransform: {fileID: 0}
+  _pinnedItem: {fileID: 0}
+  _pinnedAmount: 0
+  _hoveredGrid: {fileID: 0}
+  _hoveredCell: {fileID: 0}
+  _hoveredCellPosition: {x: -1, y: -1}
+  _hoveredInvItem: {fileID: 0}
 --- !u!1 &487754196
 GameObject:
   m_ObjectHideFlags: 0
@@ -1082,7 +1163,7 @@ MonoBehaviour:
   m_BlockingObjects: 0
   m_BlockingMask:
     serializedVersion: 2
-    m_Bits: 4294967295
+    m_Bits: 55
 --- !u!114 &5784659139544955667
 MonoBehaviour:
   m_ObjectHideFlags: 0

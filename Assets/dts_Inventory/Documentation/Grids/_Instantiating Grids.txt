@@ -1,0 +1,11 @@
+Instantiating Grids
+
+When a grid is instantiated, it resizes itself based on the container size property in the InvGrid script (cells, width x height).
+It also then creates the cells it needs. This is done dynamically OnStart (after Awake and OnEnable).
+
+If you're dynamically creating may grids (loot containers, for example), be sure your Ui system doesn't
+try to do manipulate the grid until after that grid's OnStart has processed (which is generally after its created,
+assuming your prefab isn't set to deactivated on creation).
+
+Performance-wise, grids aren't pooled. Meaning you'll notice performance issues if your frequently creating/destoying a 
+lot of grids.
