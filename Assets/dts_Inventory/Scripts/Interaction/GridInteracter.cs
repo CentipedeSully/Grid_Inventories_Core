@@ -144,12 +144,14 @@ namespace dtsInventory
                 return;
             }
 
-            _hoveredGrid = grid; 
+            _hoveredGrid = grid;
+            SubscribeToEnteredGrid();
         }
         public void ClearHoveredGrid()
         {
             if (_hoveredGrid != null)
             {
+                UnsubscribeFromGrid();
                 _hoveredGrid = null;
             }
         }
@@ -336,7 +338,48 @@ namespace dtsInventory
                 _pinnedItem.RotateItem(RotationDirection.CounterClockwise);
         }
 
+        public void SubscribeToEnteredGrid()
+        {
+            _hoveredGrid.OnContentsChanged += RespondToGridContentsUpdated;
+            _hoveredGrid.OnBulkContentsChanged += RespondToBulkGridContentUpdate;
+            _hoveredGrid.OnGridDestroyed += RespondToUnexpectedGridDeletion;
+        }
+        public void UnsubscribeFromGrid()
+        {
+            _hoveredGrid.OnContentsChanged -= RespondToGridContentsUpdated;
+            _hoveredGrid.OnBulkContentsChanged -= RespondToBulkGridContentUpdate;
+            _hoveredGrid.OnGridDestroyed -= RespondToUnexpectedGridDeletion;
+        }
+        public void RespondToGridContentsUpdated(InvContentsUpdate update)
+        {
+            LogGridOnChangedActivity(update);
+
+
+        }
+        public void RespondToBulkGridContentUpdate(List<InvContentsUpdate> updatesList)
+        {
+            for (int i = 0; i <= updatesList.Count; i++)
+            {
+                LogGridOnChangedActivity(updatesList[i]);
+            }
+        }
+        public void RespondToUnexpectedGridDeletion()
+        {
+            UnsubscribeFromGrid();
+            ClearHoveredGrid();
+            ClearHoveredCell();
+        }
         //debug
+
+        private void LogGridOnChangedActivity(InvContentsUpdate update)
+        {
+            string debugString = $"Detected Grid activty: \nOperation : {update.operation}\nItem : {update.itemData}\nAmount : {update.amount}\nPositions Affected:\n";
+            foreach (HashSet<(int,int)> stackArea in update.stackAreasAffected)
+            {
+                debugString += "{ " + InvGrid.StringifyPositions(stackArea) + " }\n";
+            }
+            Debug.Log(debugString);
+        }
     }
 
 

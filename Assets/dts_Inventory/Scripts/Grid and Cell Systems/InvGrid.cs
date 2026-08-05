@@ -7,6 +7,7 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using UnityEngine.UIElements;
 using static UnityEditor.Progress;
 
 
@@ -27,12 +28,23 @@ namespace dtsInventory
         public ItemData itemData;
         public int amount;
 
+        //every element of this list is a stack that was modified.
+        //The item that was modified may or may not exist anymore. This is just telling where the actions occurred.
+        //Used for updating externals watching the grid. ex: used by the native 'GridInteracter' to update itself when an action changes the grid its hovering over.
 
-        public InvContentsUpdate(ItemData itemTypechanged, int changeAmount, InvOperation operationThatHappened)
+        public List<HashSet<(int, int)>> stackAreasAffected; 
+
+
+        public InvContentsUpdate(ItemData itemTypechanged, int changeAmount, InvOperation operationThatHappened, List<HashSet<(int,int)>> stackAreasChanged)
         {
             this.operation = operationThatHappened;
             this.itemData = itemTypechanged;
-            amount = changeAmount;
+            this.amount = changeAmount;
+
+            this.stackAreasAffected = new();
+
+            foreach (HashSet<(int,int)> element in stackAreasChanged)
+                stackAreasAffected.Add(element.ToHashSet());
         }
     }
 
@@ -288,7 +300,7 @@ namespace dtsInventory
         /// </summary>
         /// <param name="position">The grid position to check.
         /// Any Grid position may belong to only one item stack at a time.</param>
-        /// <returns></returns>
+        /// <returns>A new set containing every position of the detected stack.</returns>
         private HashSet<(int, int)> StackArea((int, int) position)
         {
             //look at all the saved stack positionSets
@@ -699,9 +711,9 @@ namespace dtsInventory
         {
             OnContentsChanged?.Invoke(update);
         }
-        private void RaiseInvContentsChangeEvent(ItemData itemData, int amount, InvOperation operation)
+        private void RaiseInvContentsChangeEvent(ItemData itemData, int amount, InvOperation operation, List<HashSet<(int,int)>> stacksAffected)
         {
-            OnContentsChanged?.Invoke(new InvContentsUpdate(itemData,amount,operation));
+            OnContentsChanged?.Invoke(new InvContentsUpdate(itemData,amount,operation, stacksAffected));
         }
         private void RaiseBulkInvContentsChangeEvent(List<InvContentsUpdate> updateList)
         {
@@ -991,11 +1003,11 @@ namespace dtsInventory
         /// Communicates multiple inventory changes as a single transaction.
         /// </summary>
         /// <param name="operationsList">A list of operations that were manually performed</param>
-        public void ForceRaiseBulkInvContentsChanged(List<(ItemData, int, InvOperation)> operationsList)
+        public void ForceRaiseBulkInvContentsChanged(List<(ItemData, int, InvOperation, List<HashSet<(int,int)>>)> operationsList)
         {
             List<InvContentsUpdate> updatesList = new();
-            foreach ((ItemData, int, InvOperation) entry in operationsList)
-                updatesList.Add(new InvContentsUpdate(entry.Item1, entry.Item2, entry.Item3));
+            foreach ((ItemData, int, InvOperation, List<HashSet<(int,int)>>) entry in operationsList)
+                updatesList.Add(new InvContentsUpdate(entry.Item1, entry.Item2, entry.Item3, entry.Item4));
 
             RaiseBulkInvContentsChangeEvent(updatesList);
 
@@ -1325,11 +1337,20 @@ namespace dtsInventory
                 Debug.LogWarning($"Failed to find {amount} items at position [({position.Item1},{position.Item2})]. Found {_stackCapacities[StackArea(position)]} items.");
                 return false;
             }
+            ItemData itemChanged = GetStackItemData(position);
+
+            //create the list of areas that were changed [All fresh collections]
+            List<HashSet<(int, int)>> areasAffected = new();
+            areasAffected.Add(StackArea(position));
+
 
             DecreaseStack(position, amount);
 
+            Debug.Log($"Tracked affected stack Areas count: {areasAffected.Count}");
+            Debug.Log($"ItemData inferred: {itemChanged}");
+
             if (!suppressOnChangedEvent)
-                RaiseInvContentsChangeEvent(new InvContentsUpdate(GetStackItemData(position), amount, InvOperation.Remove));
+                RaiseInvContentsChangeEvent(new InvContentsUpdate(itemChanged, amount, InvOperation.Remove, areasAffected));
 
             return true;
         }
@@ -1346,27 +1367,58 @@ namespace dtsInventory
         /// <returns>true if all requested items were removed successfully. false otherwise.</returns>
         public bool RemoveItem(string itemCode, int amount, bool suppressOnChangedEvent = false)
         {
+            ItemData itemToFind = ItemCreatorHelper.GetItemDataFromItemCode(itemCode);
+
+            if (itemToFind == null)
+            {
+                Debug.LogWarning($"Either the ItemCode {itemCode} isn't recognized by the ItemCreator (due to it missing a refernce to that specific item in its itemList), " +
+                    $"or the ItemCreator doesn't exist in the scene. Ensure the ItemCreator exists, is active in the scene, and has a reference to all ItemData references. Ignoring Remove request.");
+                return false;
+            }
+            
+            if (CountItem(itemToFind) < amount)
+            {
+                Debug.LogWarning($"Failed to find {amount} items of itemCode [{itemCode} :: {itemToFind.Name()}]. Only found {CountItem(itemToFind)} of {amount} items.");
+                return false;
+            }
+
             int remainder = amount;
             int found = 0;
             Dictionary<HashSet<(int, int)>, int> foundAmounts = new Dictionary<HashSet<(int, int)>, int>(HashSet<(int, int)>.CreateSetComparer());
+
+            //create the list of areas that were changed [All fresh collections]
+            List<HashSet<(int, int)>> areasAffected = new();
 
             //check each itemStack's itemData for a matching itemCode
             foreach (KeyValuePair<HashSet<(int, int)>, ItemData> entry in _stackItemDatas)
             {
                 if (entry.Value.ItemCode().ToLower() == itemCode.ToLower())
                 {
+
                     //if our amount total was found, remove them all
                     if (_stackCapacities[entry.Key] >= remainder)
                     {
+                        //ensure we aren't accidentally exposing the key itself
+                        HashSet<(int, int)> newStackAreaSet = entry.Key.ToHashSet();
+
                         //remove any remainder amount from this stack first
-                        RemoveItem(entry.Key.First(), remainder);
+                        RemoveItem(newStackAreaSet.First(), remainder);
 
                         //then remove all the recorded amounts from the previous stacks
                         foreach (KeyValuePair<HashSet<(int,int)>,int> stack in foundAmounts)
-                            RemoveItem(stack.Key.First(), stack.Value);
+                            RemoveItem(newStackAreaSet.First(), stack.Value);
+                        
 
+                        //track the affected stackAreas
+                        if (!areasAffected.Contains(newStackAreaSet))
+                            areasAffected.Add(newStackAreaSet);
+
+                        //Debug.Log($"Tracked affected stack Areas count: {areasAffected.Count}");
+                        //Debug.Log($"ItemData inferred: {itemToFind}");
+
+                        //raise the event
                         if (!suppressOnChangedEvent)
-                            RaiseInvContentsChangeEvent(new InvContentsUpdate(ItemCreatorHelper.GetItemDataFromItemCode(itemCode), amount, InvOperation.Remove));
+                            RaiseInvContentsChangeEvent(new InvContentsUpdate(ItemCreatorHelper.GetItemDataFromItemCode(itemCode), amount, InvOperation.Remove,areasAffected));
 
                         return true;
                     }
@@ -1374,15 +1426,23 @@ namespace dtsInventory
                     //else, save the current stack, reduce the amount by the found stack's capacity, and continue looking for the remainder
                     else
                     {
-                        found += _stackCapacities[entry.Key];
-                        foundAmounts[entry.Key] = _stackCapacities[entry.Key];
-                        remainder -= _stackCapacities[entry.Key];
+                        //first, create a fresh collection to ensure we wont accidentally expose the key's reference to externals
+                        HashSet<(int, int)> newStackAreaSet = entry.Key.ToHashSet();
+
+
+                        found += _stackCapacities[newStackAreaSet];
+                        foundAmounts[newStackAreaSet] = _stackCapacities[newStackAreaSet];
+                        remainder -= _stackCapacities[newStackAreaSet];
+
+                        //track the affected stackAreas
+                        if (!areasAffected.Contains(newStackAreaSet))
+                            areasAffected.Add(newStackAreaSet);
                     }
                 }
             }
 
             //if we got down here, then we didn't find the full amount of items to fulfill the request. Raise a yellow alert. The User probably didn't check the item count beforehand.
-            Debug.LogWarning($"Failed to find {amount} items of itemCode [{itemCode}]. Only found {found} of {amount} items.");
+            Debug.LogWarning($"Failed to find {amount} items of itemCode [{itemCode}]. Only found {found} of {amount} items. [Reached the very end of the method, which shouldnt be possible...]");
             return false;
         }
         /// <summary>
@@ -1438,6 +1498,9 @@ namespace dtsInventory
             
             Dictionary<HashSet<(int, int)>, int> availableStacks = new Dictionary<HashSet<(int, int)>, int>(HashSet<(int, int)>.CreateSetComparer());
 
+            List<HashSet<(int, int)>> areasAffected = new();
+
+
             //first, find preexisting stacks that aren't yet full
             foreach (KeyValuePair<HashSet<(int,int)>,ItemData> stack in _stackItemDatas)
             {
@@ -1446,10 +1509,12 @@ namespace dtsInventory
                 {
                     int foundSpace = itemData.StackLimit() - _stackCapacities[stack.Key];
 
+
                     //just track this stack's remaining capacity
                     availableStacks[stack.Key] = foundSpace;
 
                     totalSpacesFound += foundSpace;
+
 
                     //break if we don't need to keep searching for space
                     if (totalSpacesFound >= amount)
@@ -1466,20 +1531,28 @@ namespace dtsInventory
                 
                 foreach (KeyValuePair<HashSet<(int, int)>, int> stack in availableStacks)
                 {
+                    //ensure we aren't accidentally exposing the key itself
+                    HashSet<(int, int)> newStackAreaSet = stack.Key.ToHashSet();
+
                     //place either the remainingAmount, or the stack's remaining capacity. Whichever is smallest
                     placementAmount = Mathf.Min(remainingAmount, stack.Value);
 
                     //place either the remaining items, or the stacks remaining capacity
-                    IncreaseStack(stack.Key.First(), placementAmount);
+                    IncreaseStack(newStackAreaSet.First(), placementAmount);
 
                     //update the remainder. 
                     remainingAmount -= placementAmount;
+
+
+                    //track the stack as changed/affected
+                    if (!areasAffected.Contains(newStackAreaSet))
+                        areasAffected.Add(newStackAreaSet);
 
                     //we've Added the requested items into preexisting stacks
                     if (remainingAmount == 0)
                     {
                         if (!suppressOnChangedEvent)
-                            RaiseInvContentsChangeEvent(itemData, amount,InvOperation.Add);
+                            RaiseInvContentsChangeEvent(itemData, amount,InvOperation.Add, areasAffected);
                             
                         return true;
                     }
@@ -1558,6 +1631,9 @@ namespace dtsInventory
             {
                 IncreaseStack(entry.Key.First(), entry.Value);
                 remainingAmount -= entry.Value;
+
+                //track this stack as edited
+                areasAffected.Add(entry.Key.ToHashSet());
             }
 
 
@@ -1590,11 +1666,14 @@ namespace dtsInventory
                 //Stack size should be the smallest of either the stackLimit OR the remaining amount to place
                 CreateStack(entry.Value.gridPlacementPosition, newItem, placementAmount);
                 remainingAmount -= placementAmount;
+
+                //track this stack as edited
+                areasAffected.Add(entry.Key.ToHashSet());
             }
 
             //We're Done!
             if (!suppressOnChangedEvent)
-                RaiseInvContentsChangeEvent(itemData, amount, InvOperation.Add);
+                RaiseInvContentsChangeEvent(itemData, amount, InvOperation.Add, areasAffected);
             return true;
 
         }
@@ -1639,6 +1718,10 @@ namespace dtsInventory
             }
 
             HashSet<(int, int)> placementArea = ConvertSpacialDefIntoGridArea(position, itemData.RotatedSpacialDef(rotation), itemData.RotatedItemHandle(rotation));
+
+            //create the collection of edited position, for the OnContentsChanged event
+            List<HashSet<(int, int)>> affectedPositions = new();
+
 
             //Deliberately AVOID checking if the selected position is directly occupied.
             //What if the ItemHandle isn't within the spacial def? (Could be offset/ or a hollow item)
@@ -1691,8 +1774,12 @@ namespace dtsInventory
                 }
 
                 CreateStack(position, invItem, amount);
+
+                //track the newly-created stack
+                affectedPositions.Add(StackArea(position));
+
                 if (!suppressOnChangedEvent)
-                    RaiseInvContentsChangeEvent(itemData, amount, InvOperation.Add);
+                    RaiseInvContentsChangeEvent(itemData, amount, InvOperation.Add, affectedPositions);
 
                 return true;
             }
@@ -1724,6 +1811,9 @@ namespace dtsInventory
                     openStacks.Add(GetStackArea(position));
                     stackCapacities.Add(detectedSpace);
                     remainingSpacesToFind -= placementValue;
+
+                    //we're definitely adding items here, to track this found stack
+                    affectedPositions.Add(StackArea(position));
                     
                     //if we've found space for all the items right here, then we can add everything now and end the operation.
                     if (remainingSpacesToFind == 0)
@@ -1731,7 +1821,7 @@ namespace dtsInventory
                         IncreaseStack(position, placementValue);
 
                         if (!suppressOnChangedEvent)
-                            RaiseInvContentsChangeEvent(itemData, amount, InvOperation.Add);
+                            RaiseInvContentsChangeEvent(itemData, amount, InvOperation.Add, affectedPositions);
 
                         return true;
                     }
@@ -1764,6 +1854,9 @@ namespace dtsInventory
                         stackCapacities.Add(detectedSpace);
                         remainingSpacesToFind -= placementValue;
 
+                        //track this found, soon-to-be-filled stack
+                        affectedPositions.Add(StackArea(position));
+
                         //if we've found positions for all of our requested items, then add them to the tracked stacks and end the operation
                         if (remainingSpacesToFind == 0)
                         {
@@ -1771,7 +1864,7 @@ namespace dtsInventory
                                 IncreaseStack(openStacks[i].First(), stackCapacities[i]);
 
                             if (!suppressOnChangedEvent)
-                                RaiseInvContentsChangeEvent(itemData, amount, InvOperation.Add);
+                                RaiseInvContentsChangeEvent(itemData, amount, InvOperation.Add,affectedPositions);
 
                             return true;
                         }
@@ -2786,7 +2879,7 @@ namespace dtsInventory
         /// </summary>
         /// <param name="positions">The Set of positions to make readable</param>
         /// <returns>A readable string of (int,int)'s</returns>
-        public string StringifyPositions(HashSet<(int, int)> positions)
+        public static string StringifyPositions(HashSet<(int, int)> positions)
         {
             string log = "";
             foreach (var position in positions)

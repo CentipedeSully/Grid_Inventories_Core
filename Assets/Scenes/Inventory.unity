@@ -1428,8 +1428,8 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-  _logSubscriptionStatus: 1
-  _logEvents: 1
+  _logSubscriptionStatus: 0
+  _logEvents: 0
 --- !u!114 &8377175759222511349
 MonoBehaviour:
   m_ObjectHideFlags: 0

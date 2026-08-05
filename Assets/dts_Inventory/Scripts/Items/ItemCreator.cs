@@ -142,11 +142,61 @@ namespace dtsInventory
 
         public static void SetItemCreator(ItemCreator creator) { _creator = creator; }
 
-        public static GameObject CreateItem(ItemData itemData, float tileWidth, float tileHeight) { return _creator.CreateItem(itemData, tileWidth, tileHeight); }
-        public static GameObject CreateRandomItem(float tileWidth, float tileHeight) { return _creator.CreateRandomItem(tileWidth, tileHeight); }
-        public static Transform GetUiItemsContainer() { return _creator.GetItemContainer(); }
-        public static ItemData GetItemDataFromItemCode(string code) { return _creator.GetItemDataFromCode(code); }
-        public static void ReturnItemToCreator(InvItem item) { _creator.ReturnItem(item); }
+        public static GameObject CreateItem(ItemData itemData, float tileWidth, float tileHeight) 
+        { 
+            if (_creator != null)
+                return _creator.CreateItem(itemData, tileWidth, tileHeight);
+            else
+            {
+                Debug.LogWarning("An active ItemCreator doesn't exist in your scene. Add the Script anywhere in the scene, or ensure its" +
+                    " awake before attempting to create any items. Only 1 should exist in a scene.");
+                return null;
+            }
+        }
+        public static GameObject CreateRandomItem(float tileWidth, float tileHeight) 
+        { 
+            if (_creator != null)
+                return _creator.CreateRandomItem(tileWidth, tileHeight);
+            else
+            {
+                Debug.LogWarning("An active ItemCreator doesn't exist in your scene. Add the Script anywhere in the scene, or ensure its" +
+                    " awake before attempting to create any items. Only 1 should exist in a scene.");
+                return null;
+            }
+        }
+        public static Transform GetUiItemsContainer() 
+        { 
+            if (_creator != null)
+                return _creator.GetItemContainer();
+            else
+            {
+                Debug.LogWarning("An active ItemCreator doesn't exist in your scene. Add the Script anywhere in the scene, or ensure its" +
+                    " awake before attempting to create fetch any of its references. Only 1 should exist in a scene.");
+                return null;
+            }
+        }
+        public static ItemData GetItemDataFromItemCode(string code) 
+        { 
+            if (_creator != null)
+                return _creator.GetItemDataFromCode(code);
+            else
+            {
+                Debug.LogWarning("An active ItemCreator doesn't exist in your scene. Add the Script anywhere in the scene, or ensure its" +
+                    " awake before attempting to reverse-lookup items by their itemcode. Only 1 should exist in a scene.");
+                return null;
+            }
+        }
+        public static void ReturnItemToCreator(InvItem item) 
+        { 
+            if (_creator != null)
+                _creator.ReturnItem(item);
+            else
+            {
+                Debug.LogWarning("An active ItemCreator doesn't exist in your scene. Add the Script anywhere in the scene, or ensure its" +
+                    " awake before attempting to return items to their creator. Only 1 should exist in a scene, and IT SHOULD NOT BE DESTROYED.");
+                
+            }
+        }
 
 
     }
