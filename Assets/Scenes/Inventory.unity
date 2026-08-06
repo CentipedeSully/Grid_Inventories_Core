@@ -331,6 +331,7 @@ MonoBehaviour:
   _hoveredCell: {fileID: 0}
   _hoveredCellPosition: {x: -1, y: -1}
   _hoveredInvItem: {fileID: 0}
+  _logDetectedGridEvents: 0
 --- !u!1 &487754196
 GameObject:
   m_ObjectHideFlags: 0
@@ -1443,8 +1444,42 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _isDebugActive: 0
-  _gridToTest: {fileID: 0}
-  _paramOperationsList: []
+  _gridToTest: {fileID: 7768827273871646501}
+  _paramSerializableOperationsList:
+  - operation: 1
+    itemData: {fileID: 11400000, guid: 6d528f0074d821842bed9fcf5cb51491, type: 2}
+    amount: 9
+    stackAreasAffected:
+    - list:
+      - {x: 0, y: 0}
+      - {x: 1, y: 0}
+      - {x: 2, y: 0}
+      - {x: 3, y: 0}
+    - list:
+      - {x: 4, y: 0}
+      - {x: 5, y: 0}
+      - {x: 6, y: 0}
+      - {x: 7, y: 0}
+  - operation: 1
+    itemData: {fileID: 11400000, guid: ea50991f2c3a1c84da06961a8df57956, type: 2}
+    amount: 1500
+    stackAreasAffected:
+    - list:
+      - {x: 0, y: 1}
+    - list:
+      - {x: 1, y: 1}
+    - list:
+      - {x: 2, y: 1}
+  - operation: 2
+    itemData: {fileID: 11400000, guid: 9ed031f30ac9eaf43916d9c3810d1d6e, type: 2}
+    amount: 4
+    stackAreasAffected:
+    - list:
+      - {x: 4, y: 0}
+      - {x: 4, y: 1}
+    - list:
+      - {x: 5, y: 0}
+      - {x: 5, y: 1}
   _cmdRaiseBulkOperationEvent: 0
 --- !u!224 &8463427159485444431
 RectTransform:

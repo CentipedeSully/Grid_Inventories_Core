@@ -26,6 +26,9 @@ namespace dtsInventory
         [SerializeField] private Vector2 _hoveredCellPosition = -Vector2.one;
         [SerializeField] private InvItem _hoveredInvItem;
 
+        [Header("Debug")]
+        [SerializeField] private bool _logDetectedGridEvents = false;
+
 
 
 
@@ -128,6 +131,19 @@ namespace dtsInventory
                 _pinnedRectTransform = null;
                 ItemCreatorHelper.ReturnItemToCreator(_pinnedItem);
                 _pinnedItem = null;
+            }
+        }
+
+        private void UpdateFromDetectedChanges(InvContentsUpdate update)
+        {
+            //for each position that was updated, if our position was affected, then update the hovered item state
+            foreach(HashSet<(int,int)> stackArea in update.stackAreasAffected)
+            {
+                if (stackArea.Contains(_hoveredCell.Index()))
+                {
+                    _hoveredInvItem = _hoveredCell.Item();
+                    break;
+                }
             }
         }
 
@@ -352,22 +368,29 @@ namespace dtsInventory
         }
         public void RespondToGridContentsUpdated(InvContentsUpdate update)
         {
-            LogGridOnChangedActivity(update);
+            if (_logDetectedGridEvents)
+                LogGridOnChangedActivity(update);
 
+            UpdateFromDetectedChanges(update);
 
         }
         public void RespondToBulkGridContentUpdate(List<InvContentsUpdate> updatesList)
         {
-            for (int i = 0; i <= updatesList.Count; i++)
+            if (_logDetectedGridEvents)
             {
-                LogGridOnChangedActivity(updatesList[i]);
+                for (int i = 0; i < updatesList.Count; i++)
+                    LogGridOnChangedActivity(updatesList[i]);
             }
+            
         }
         public void RespondToUnexpectedGridDeletion()
         {
+            
+            Debug.LogWarning("Unexpected grid deletion detected. Unsubscribing from grid before deletion occurs...");
             UnsubscribeFromGrid();
             ClearHoveredGrid();
             ClearHoveredCell();
+            Debug.LogWarning("Unsub successful. grindInteracter state updated.");
         }
         //debug
 

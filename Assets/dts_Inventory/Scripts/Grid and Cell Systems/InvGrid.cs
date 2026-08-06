@@ -46,6 +46,25 @@ namespace dtsInventory
             foreach (HashSet<(int,int)> element in stackAreasChanged)
                 stackAreasAffected.Add(element.ToHashSet());
         }
+
+        public InvContentsUpdate(SerializableInvContentsUpdate serializableUpdate)
+        {
+            this.operation = serializableUpdate.operation;
+            this.itemData = serializableUpdate.itemData;
+            this.amount = serializableUpdate.amount;
+
+            this.stackAreasAffected = new();
+
+            foreach (InnerList element in serializableUpdate.stackAreasAffected)
+            {
+                HashSet<(int, int)> stackArea = new();
+
+                foreach (Vector2Int position in element.list)
+                    stackArea.Add((position.x, position.y));
+
+                stackAreasAffected.Add(stackArea);
+            }
+        }
     }
 
     public class InvGrid : MonoBehaviour
@@ -1346,8 +1365,8 @@ namespace dtsInventory
 
             DecreaseStack(position, amount);
 
-            Debug.Log($"Tracked affected stack Areas count: {areasAffected.Count}");
-            Debug.Log($"ItemData inferred: {itemChanged}");
+            //Debug.Log($"Tracked affected stack Areas count: {areasAffected.Count}");
+            //Debug.Log($"ItemData inferred: {itemChanged}");
 
             if (!suppressOnChangedEvent)
                 RaiseInvContentsChangeEvent(new InvContentsUpdate(itemChanged, amount, InvOperation.Remove, areasAffected));
@@ -1401,17 +1420,28 @@ namespace dtsInventory
                         //ensure we aren't accidentally exposing the key itself
                         HashSet<(int, int)> newStackAreaSet = entry.Key.ToHashSet();
 
+                        //track the current stack's position for the OnContentsChanged event
+                        if (!areasAffected.Contains(newStackAreaSet))
+                            areasAffected.Add(newStackAreaSet);
+
                         //remove any remainder amount from this stack first
-                        RemoveItem(newStackAreaSet.First(), remainder);
+                        RemoveItem(newStackAreaSet.First(), remainder,true);
+
+
+                        HashSet<(int, int)> pastStackArea;
 
                         //then remove all the recorded amounts from the previous stacks
                         foreach (KeyValuePair<HashSet<(int,int)>,int> stack in foundAmounts)
-                            RemoveItem(newStackAreaSet.First(), stack.Value);
-                        
+                        {
+                            //before removal, track every past stack's position info
+                            pastStackArea = stack.Key.ToHashSet();
 
-                        //track the affected stackAreas
-                        if (!areasAffected.Contains(newStackAreaSet))
-                            areasAffected.Add(newStackAreaSet);
+                            if (!areasAffected.Contains(pastStackArea))
+                                areasAffected.Add(pastStackArea);
+
+                            //remove all items from each past stack
+                            RemoveItem(pastStackArea.First(), stack.Value,true);
+                        }
 
                         //Debug.Log($"Tracked affected stack Areas count: {areasAffected.Count}");
                         //Debug.Log($"ItemData inferred: {itemToFind}");
@@ -1433,10 +1463,6 @@ namespace dtsInventory
                         found += _stackCapacities[newStackAreaSet];
                         foundAmounts[newStackAreaSet] = _stackCapacities[newStackAreaSet];
                         remainder -= _stackCapacities[newStackAreaSet];
-
-                        //track the affected stackAreas
-                        if (!areasAffected.Contains(newStackAreaSet))
-                            areasAffected.Add(newStackAreaSet);
                     }
                 }
             }
