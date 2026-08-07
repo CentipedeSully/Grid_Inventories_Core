@@ -248,6 +248,81 @@ namespace dtsInventory
                 return;
             }
         }
+        public void PinSingleFromHoveredStackToMouse()
+        {
+            if (_hoveredGrid == null)
+            {
+                Debug.LogWarning("Can't pin a stack from a null grid.");
+                return;
+            }
+
+            if (_hoveredCell == null)
+            {
+                Debug.LogWarning("Can't pin a stack from a null hovered cell.");
+                return;
+            }
+
+            //don't pin a stack while already holding a pinned stack
+            if (_pinnedItem != null && _hoveredInvItem != null)
+            {
+                Debug.LogWarning("Can't pin a stack while already holding an (incompatible) pinned stack.");
+                return;
+            }
+
+            //if we're not holding a stack, pin a single item from the hovered stack
+            else if (_hoveredInvItem != null)
+            {
+                //pin the stack to the pointer
+                PinInvItem(_hoveredInvItem, 1, _hoveredGrid);
+                UpdatePinnedStackText();
+
+                //remove the stack from the grid
+                _hoveredGrid.RemoveItem(_hoveredCell.Index(), _pinnedAmount);
+                return;
+            }
+        }
+        public void PinHalfFromHoveredStackToMouse()
+        {
+            if (_hoveredGrid == null)
+            {
+                Debug.LogWarning("Can't pin a stack from a null grid.");
+                return;
+            }
+
+            if (_hoveredCell == null)
+            {
+                Debug.LogWarning("Can't pin a stack from a null hovered cell.");
+                return;
+            }
+
+            //don't pin a stack while already holding a pinned stack
+            if (_pinnedItem != null && _hoveredInvItem != null)
+            {
+                Debug.LogWarning("Can't pin a stack while already holding an (incompatible) pinned stack.");
+                return;
+            }
+
+            //if we're not holding a stack, pin what's hovered
+            else if (_hoveredInvItem != null)
+            {
+                int hoveredStackSize = _hoveredGrid.GetStackValue(_hoveredCell.Index());
+                int amountToPin;
+
+                if (hoveredStackSize == 1)
+                    amountToPin = 1;
+                else
+                    amountToPin = Mathf.CeilToInt(hoveredStackSize/ 2.0f); //ensure we round up!
+
+                //pin the stack to the pointer
+                PinInvItem(_hoveredInvItem, amountToPin, _hoveredGrid);
+                UpdatePinnedStackText();
+
+                //remove the stack from the grid
+                _hoveredGrid.RemoveItem(_hoveredCell.Index(), _pinnedAmount);
+                return;
+            }
+        }
+
         public void PlacePinnedStackToHoveredCell()
         {
             if (_hoveredGrid == null)
@@ -314,7 +389,7 @@ namespace dtsInventory
                                     {
                                         //PlayItemDropAudio();
                                         _hoveredGrid.AddItem(_pinnedItem.ItemData(), openCapacity, index, _pinnedItem.Rotation());
-                                        _pinnedAmount -= openCapacity;
+                                        ClearPinnedAmount(openCapacity);
                                         UpdatePinnedStackText();
 
                                         return;
@@ -359,10 +434,212 @@ namespace dtsInventory
                             $" looking where it should be (mixed up indexes? Wrong parameter?).");
 
                     }
+
+                    //if many stacks are being hovered over, top off as many compatible stacks as possible. Don't attempt to swap stacks.
+                    else if (itemCount  > 1)
+                    {
+                        foreach ((int, int) index in placementArea)
+                        {
+                            //find the first cell that our detected stack is occupying
+                            if (_hoveredGrid.IsCellOccupied(index))
+                            {
+                                //if the stack is compatible and not yet full, top it off
+                                if (_hoveredGrid.GetStackItemData(index).ItemCode() == _pinnedItem.ItemData().ItemCode() && _hoveredGrid.GetStackValue(index) < _pinnedItem.ItemData().StackLimit())
+                                {
+                                    int stackValue = _hoveredGrid.GetStackValue(index);
+                                    int stackMaxCapacity = _hoveredGrid.GetStackItemData(index).StackLimit();
+                                    int openCapacity = stackMaxCapacity - stackValue; //openCapacity will always be above zero if we've made it this far
+
+                                    //place all held items here if the stack can take it
+                                    if (_pinnedAmount <= openCapacity)
+                                    {
+                                        //PlayItemDropAudio();
+                                        _hoveredGrid.AddItem(_pinnedItem.ItemData(), _pinnedAmount, index, _pinnedItem.Rotation());
+                                        ClearPinnedAmount(_pinnedAmount);
+
+                                        UpdatePinnedStackText();
+
+                                        //we placed everything. We can return.
+                                        return;
+                                    }
+
+                                    //otherwise, only place enough items to fill the stack here. Don't clear the held item yet, since we have some left.
+                                    else
+                                    {
+                                        //PlayItemDropAudio();
+                                        _hoveredGrid.AddItem(_pinnedItem.ItemData(), openCapacity, index, _pinnedItem.Rotation());
+                                        ClearPinnedAmount(openCapacity);
+                                        UpdatePinnedStackText();
+
+                                        //don't return. Keep looking for open stacks.
+
+                                    }
+
+                                }
+                            }
+                        }
+
+                    }
                 }
             }
 
         }
+        public void PlaceSingleToHoveredCell()
+        {
+            if (_hoveredGrid == null)
+            {
+                Debug.LogWarning("Can't place a stack to a null grid.");
+                return;
+            }
+
+            if (_hoveredCell == null)
+            {
+                Debug.LogWarning("Can't palce a stack to a null hovered cell.");
+                return;
+            }
+
+            if (_pinnedItem != null)
+            {
+                HashSet<(int, int)> placementArea = _hoveredGrid.ConvertSpacialDefIntoGridArea(_hoveredCell.Index(), _pinnedItem.GetSpacialDefinition(), _pinnedItem.ItemHandle());
+                //Debug.Log($"Drop Single item Called. Placement area: {_invGrid.StringifyPositions(placementArea)}");
+                //make sure the entire item area is within the grid
+                if (_hoveredGrid.IsAreaWithinGrid(placementArea))
+                {
+                    int itemCount = _hoveredGrid.CountUniqueStacksInArea(placementArea);
+
+                    //if position is completely empty, place here
+                    if (itemCount == 0)
+                    {
+
+                        //PlayItemDropAudio();
+                        _hoveredGrid.AddItem(_pinnedItem.ItemData(), 1, _hoveredCell.Index(), _pinnedItem.Rotation());
+                        ClearPinnedAmount(1);
+                        UpdatePinnedStackText();
+                        return;
+                    }
+
+                    //if one or more stacks are found, top off the first compatible stack thats detected. Do not swap stacks.
+                    else if (itemCount >= 1)
+                    {
+                        foreach ((int, int) index in placementArea)
+                        {
+                            //find the first cell that our detected stack is occupying
+                            if (_hoveredGrid.IsCellOccupied(index))
+                            {
+                                //if the stack is compatible and not yet full, top it off
+                                if (_hoveredGrid.GetStackItemData(index).ItemCode() == _pinnedItem.ItemData().ItemCode() && _hoveredGrid.GetStackValue(index) < _pinnedItem.ItemData().StackLimit())
+                                {
+                                    int stackValue = _hoveredGrid.GetStackValue(index);
+                                    int stackMaxCapacity = _hoveredGrid.GetStackItemData(index).StackLimit();
+                                    int openCapacity = stackMaxCapacity - stackValue; //openCapacity will always be above zero if we've made it this far
+
+                                    //place the one pinned items here if the stack can take it
+                                    if (openCapacity > 0)
+                                    {
+                                        //PlayItemDropAudio();
+                                        _hoveredGrid.AddItem(_pinnedItem.ItemData(), 1, index, _pinnedItem.Rotation());
+                                        ClearPinnedAmount(1);
+
+                                        UpdatePinnedStackText();
+
+                                        return;
+                                    }
+
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        public void PlaceHalfToHoveredCell()
+        {
+            if (_hoveredGrid == null)
+            {
+                Debug.LogWarning("Can't place a stack to a null grid.");
+                return;
+            }
+
+            if (_hoveredCell == null)
+            {
+                Debug.LogWarning("Can't palce a stack to a null hovered cell.");
+                return;
+            }
+
+            if (_pinnedItem != null)
+            {
+                HashSet<(int, int)> placementArea = _hoveredGrid.ConvertSpacialDefIntoGridArea(_hoveredCell.Index(), _pinnedItem.GetSpacialDefinition(), _pinnedItem.ItemHandle());
+                //Debug.Log($"Drop HalfStack Called. Placement area: {_invGrid.StringifyPositions(placementArea)}");
+                //make sure the entire item area is within the grid
+                if (_hoveredGrid.IsAreaWithinGrid(placementArea))
+                {
+                    int itemCount = _hoveredGrid.CountUniqueStacksInArea(placementArea);
+                    int amountToPlace;
+
+                    if (_pinnedAmount == 1)
+                        amountToPlace = 1;
+                    else
+                        amountToPlace = Mathf.CeilToInt(_pinnedAmount / 2.0f); //ensure we round up!
+
+                    //if position is completely empty, place here
+                    if (itemCount == 0)
+                    {
+
+                        //PlayItemDropAudio();
+                        _hoveredGrid.AddItem(_pinnedItem.ItemData(), amountToPlace, _hoveredCell.Index(), _pinnedItem.Rotation());
+                        ClearPinnedAmount(amountToPlace);
+                        UpdatePinnedStackText();
+                        return;
+                    }
+
+                    //if stacks were found, top off the all compatible stacks. Do not swap stacks.
+                    else if (itemCount >= 1)
+                    {
+                        foreach ((int, int) index in placementArea)
+                        {
+                            //find the first cell that our detected stack is occupying
+                            if (_hoveredGrid.IsCellOccupied(index))
+                            {
+                                //if the stack is compatible and not yet full, top it off
+                                if (_hoveredGrid.GetStackItemData(index).ItemCode() == _pinnedItem.ItemData().ItemCode() && _hoveredGrid.GetStackValue(index) < _pinnedItem.ItemData().StackLimit())
+                                {
+                                    int stackValue = _hoveredGrid.GetStackValue(index);
+                                    int stackMaxCapacity = _hoveredGrid.GetStackItemData(index).StackLimit();
+                                    int openCapacity = stackMaxCapacity - stackValue; //openCapacity will always be above zero if we've made it this far
+
+                                    //place all held items here if the stack can take it
+                                    if (amountToPlace <= openCapacity)
+                                    {
+                                        //PlayItemDropAudio();
+                                        _hoveredGrid.AddItem(_pinnedItem.ItemData(), amountToPlace, index, _pinnedItem.Rotation());
+                                        ClearPinnedAmount(amountToPlace);
+
+                                        UpdatePinnedStackText();
+
+                                        return;
+                                    }
+
+                                    //otherwise, only place enough items to fill the stack here. Don't clear the held item yet, since we have some left.
+                                    else
+                                    {
+                                        //PlayItemDropAudio();
+                                        _hoveredGrid.AddItem(_pinnedItem.ItemData(), openCapacity, index, _pinnedItem.Rotation());
+                                        amountToPlace -= openCapacity;
+                                        ClearPinnedAmount(amountToPlace);
+                                        UpdatePinnedStackText();
+
+                                    }
+
+                                }
+                            }
+                        }
+
+                    }
+                }
+            }
+        }
+
+
 
         public void RotateClockwise()
         {
