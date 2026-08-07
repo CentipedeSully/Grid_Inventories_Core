@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using TMPro.SpriteAssetUtilities;
 using Unity.VisualScripting.Antlr3.Runtime;
 using UnityEngine;
@@ -12,6 +13,7 @@ namespace dtsInventory
         [Header("References")]
         [Tooltip("Where pinned stacks/items will live. This object will follow the mouse (when applicable)")]
         [SerializeField] private RectTransform _pointerContainer;
+        [SerializeField] private TextMeshProUGUI _pinnedText;
 
         private Vector3 _mousePosition;
 
@@ -104,6 +106,7 @@ namespace dtsInventory
                 //pin the item to the pointer container
                 _pinnedRectTransform.SetParent(_pointerContainer);
                 _pinnedRectTransform.localPosition = Vector2.zero;
+
                 return;
             }
 
@@ -131,6 +134,23 @@ namespace dtsInventory
                 _pinnedRectTransform = null;
                 ItemCreatorHelper.ReturnItemToCreator(_pinnedItem);
                 _pinnedItem = null;
+
+                
+            }
+        }
+
+        private void UpdatePinnedStackText()
+        {
+            if (_pinnedText != null)
+            {
+                _pinnedText.text = _pinnedAmount.ToString();
+
+                if (_pinnedAmount <= 1)
+                    _pinnedText.gameObject.SetActive(false);
+                else
+                    _pinnedText.gameObject.SetActive(true);
+
+                _pinnedText.transform.SetAsLastSibling();
             }
         }
 
@@ -221,6 +241,7 @@ namespace dtsInventory
             {
                 //pin the stack to the pointer
                 PinInvItem(_hoveredInvItem, _hoveredGrid.GetStackValue(_hoveredCell.Index()), _hoveredGrid);
+                UpdatePinnedStackText();
 
                 //remove the stack from the grid
                 _hoveredGrid.RemoveItem(_hoveredCell.Index(), _pinnedAmount);
@@ -257,6 +278,7 @@ namespace dtsInventory
                         //PlayItemDropAudio();
                         _hoveredGrid.AddItem(_pinnedItem.ItemData(), _pinnedAmount, _hoveredCell.Index(), _pinnedItem.Rotation());
                         ClearPinnedAmount(_pinnedAmount);
+                        UpdatePinnedStackText();
                         return;
                     }
 
@@ -282,7 +304,7 @@ namespace dtsInventory
                                         _hoveredGrid.AddItem(_pinnedItem.ItemData(), _pinnedAmount, index, _pinnedItem.Rotation());
                                         ClearPinnedAmount(_pinnedAmount);
 
-                                        //UpdateHeldStackText();
+                                        UpdatePinnedStackText();
 
                                         return;
                                     }
@@ -293,8 +315,7 @@ namespace dtsInventory
                                         //PlayItemDropAudio();
                                         _hoveredGrid.AddItem(_pinnedItem.ItemData(), openCapacity, index, _pinnedItem.Rotation());
                                         _pinnedAmount -= openCapacity;
-
-                                        //UpdateHeldStackText();
+                                        UpdatePinnedStackText();
 
                                         return;
                                     }
@@ -315,13 +336,13 @@ namespace dtsInventory
                                     _hoveredGrid.RemoveItem(index, stackSize);
 
                                     //place the held item into the now-fully-open position
-                                    _hoveredGrid.AddItem(_pinnedItem.ItemData(), _pinnedAmount, index, _pinnedItem.Rotation());
+                                    _hoveredGrid.AddItem(_pinnedItem.ItemData(), _pinnedAmount, _hoveredCell.Index(), _pinnedItem.Rotation());
 
                                     ClearPinnedAmount(_pinnedAmount);
 
                                     //update our held itemData
                                     PinInvItem(newGraphic, stackSize, _hoveredGrid);
-                                    //UpdateHeldStackText();
+                                    UpdatePinnedStackText();
 
                                     return;
                                 }
