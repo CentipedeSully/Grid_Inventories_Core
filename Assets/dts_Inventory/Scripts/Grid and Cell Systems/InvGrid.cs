@@ -82,6 +82,7 @@ namespace dtsInventory
         [SerializeField] private RectTransform _activeStackTextsContainer;
         [SerializeField] private RectTransform _unusedStackTextsContainer;
         [SerializeField] private RectTransform _overlayContainer;
+        [SerializeField] private List<RectTransform> _otherContainers = new();
 
         GridLayoutGroup _layoutGroup;
 
@@ -280,6 +281,9 @@ namespace dtsInventory
             _spritesContainer.sizeDelta = dynamicSize;
             _activeStackTextsContainer.sizeDelta = dynamicSize;
             _overlayContainer.sizeDelta = dynamicSize;
+
+            foreach(RectTransform container in _otherContainers)
+                container.sizeDelta = dynamicSize;
         }
         private void InitializeGrid()
         {
@@ -1039,37 +1043,7 @@ namespace dtsInventory
 
 
 
-        /// <summary>
-        /// Places a uiObject's origin over a specified cell position. 
-        /// May also set the uiObject's sizeDelta to match the grid's cell size, if fitToCellSize is true.
-        /// fitToCellSize is true by default.
-        /// </summary>
-        /// <param name="position">What position should the object's origin be placed</param>
-        /// <param name="uiObjectRectTransform">The RectTranform of the uiObject to palce</param>
-        /// <param name="fitToCellSize">Should the uiObject be resized to the grid's cell dimensions?</param>
-        public void OverlayObjectOntoGridVisually((int, int) position, RectTransform uiObjectRectTransform, bool fitToCellSize = true)
-        {
-            if (uiObjectRectTransform == null)
-            {
-                Debug.LogWarning("Attempted to overlay a null object onto the grid. Ignoring request");
-                return;
-            }
-
-            //reparent the uiObject onto the grid visually
-            //Get the position of the hovered cell, local to the grid
-            Vector3 parentCellPosition = GetCellObject(position).GetComponent<RectTransform>().localPosition;
-
-
-            //parent the object to the grid's overlay container
-            uiObjectRectTransform.SetParent(_overlayContainer, false);
-            uiObjectRectTransform.localPosition = parentCellPosition;
-
-            //ensure the graphic fits the cell's size
-            if (fitToCellSize)
-                uiObjectRectTransform.sizeDelta = new Vector2(CellSize().x, CellSize().y);
-
-
-        }
+        
         public Vector2 CellSize() { return new Vector2(_cellSize.x,_cellSize.y); }
         public Vector2Int ContainerSize() { return new Vector2Int(_containerSize.x,_containerSize.y); }
         /// <summary>
@@ -2896,6 +2870,66 @@ namespace dtsInventory
         {
             Debug.Log($"number of stacks that exist in grid: {GetAllStacks().Count()}");
             return GetAllStacks().Count() == 0;
+        }
+
+        /// <summary>
+        /// Places a give uiObject's origin over a specified cell position. 
+        /// May also set the uiObject's sizeDelta to match the grid's cell size, if fitToCellSize is true.
+        /// fitToCellSize is false by default.
+        /// </summary>
+        /// <param name="overlayPosition">What cell position should the provided object's origin be placed</param>
+        /// <param name="overlayObject">The RectTranform of the uiObject to palce</param>
+        /// <param name="fitToCellSize">Should the uiObject be resized to the grid's cell dimensions?</param>
+        /// <param name="containerLayer">What grid container should the item be placed?</param>
+
+        public void OverlayRectTransformOntoGrid(RectTransform overlayObject, RectTransform containerLayer, (int,int) overlayPosition, bool fitToCellSize = false)
+        {
+            if (containerLayer == null)
+            {
+                Debug.LogWarning("Attempted to apply an overlay to a NULL containerLayer. Ignoring Overlay request.");
+                return;
+            }
+
+            if (overlayObject == null)
+            {
+                Debug.LogWarning("Cant overlay a NULL item onto the grid. Ignoring Overlay request.");
+                return;
+            }
+
+            if (!IsCellOnGrid(overlayPosition))
+            {
+                Debug.LogWarning("Attempted to overlay a graphic onto a position that doesn't exist on the grid. This is technically possible, but restricted." +
+                    " Ignoring Overlay Request.");
+                return;
+            }
+
+            if (containerLayer == _unusedStackTextsContainer)
+            {
+                Debug.LogWarning("Attempted to add an item to the 'unused text objects' container. Don't do this. That container is" +
+                    " dedicated to deactivated TMPro objects only, and is managed internally. Create a new container for yor own purposes instead.");
+                return;
+            }
+
+            if (containerLayer == GetComponent<RectTransform>())
+            {
+                Debug.LogWarning("Attempted to add an item to the 'Grid' container. DO NOT DO THIS! This container is" +
+                    " extremely child-order sensitive and is managed internally. Create a new container for yor own purposes instead.");
+                return;
+            }
+
+            //reparent the uiObject onto the grid visually
+            //Get the position of the hovered cell, local to the grid
+            Vector3 parentCellPosition = GetCellObject(overlayPosition).GetComponent<RectTransform>().localPosition;
+
+
+            //parent the object to the grid's overlay container
+            overlayObject.SetParent(containerLayer, false);
+            overlayObject.localPosition = parentCellPosition;
+
+            //ensure the graphic fits the cell's size
+            if (fitToCellSize)
+                overlayObject.sizeDelta = new Vector2(CellSize().x, CellSize().y);
+
         }
 
 

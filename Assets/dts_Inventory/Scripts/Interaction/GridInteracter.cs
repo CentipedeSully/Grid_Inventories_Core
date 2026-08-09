@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
@@ -21,6 +22,7 @@ namespace dtsInventory
         [SerializeField] private RectTransform _pinnedRectTransform;
         [SerializeField] private InvItem _pinnedItem;
         [SerializeField] private int _pinnedAmount;
+        private Vector2 _tileSize = Vector2.zero;
 
         [Header("Watch States (Don't Touch)")]
         [SerializeField] private InvGrid _hoveredGrid;
@@ -181,7 +183,57 @@ namespace dtsInventory
             }
 
             _hoveredGrid = grid;
+            
             SubscribeToEnteredGrid();
+
+            //resize the pinned item, in case we just entered a grid of differently-sized cells
+            if (_pinnedItem != null)
+            {
+                if (_tileSize != _hoveredGrid.CellSize())
+                {
+
+                    _tileSize = _hoveredGrid.CellSize();
+
+                    //repin a new, resized item to the item container.
+                    InvItem newItem = ItemCreatorHelper.CreateItem(_pinnedItem.ItemData(), _tileSize.x, _tileSize.y).GetComponent<InvItem>();
+
+                    //rotate the new item to match the pinned item
+                    int possibleRotations = Enum.GetValues(typeof(ItemRotation)).Length;
+                    int rotationsAttempted = 0;
+                    while (newItem.Rotation() != _pinnedItem.Rotation() && rotationsAttempted < possibleRotations)
+                    {
+                        newItem.RotateItem(RotationDirection.CounterClockwise);
+                        rotationsAttempted++;
+                    }
+
+                    if (rotationsAttempted >= possibleRotations && newItem.Rotation() != _pinnedItem.Rotation())
+                    {
+                        Debug.LogWarning("Attempted to seamlessly switch items similar items (to resize the pinned item) due to a detected difference in" +
+                            " tileSizes, but failed to rotate the newly-sized item to match the currently-pinned item. Ensure the rotations of your items are" +
+                            " cyclic-- meaning your 'Rotate' implementation goes through all possible rotations in a cycle if called enough times. " +
+                            "We're keeping the newly-created item, but the rotation will be different.");
+
+                        
+                    }
+
+                    //return the old item to the item Creator
+                    ItemCreatorHelper.ReturnItemToCreator(_pinnedItem);
+
+                    //update the new item as the pinned item
+                    _pinnedItem = newItem;
+                    _pinnedRectTransform = newItem.GetComponent<RectTransform>();
+
+                    //pin the item to the pointer container
+                    _pinnedRectTransform.SetParent(_pointerContainer);
+                    _pinnedRectTransform.localPosition = Vector2.zero;
+
+                }
+            }
+
+            //always ensure this it updated anyway
+            _tileSize = _hoveredGrid.CellSize();
+
+            
         }
         public void ClearHoveredGrid()
         {
@@ -202,7 +254,7 @@ namespace dtsInventory
             _hoveredCell = cell;
             _hoveredCellPosition = new Vector2(cell.Index().Item1, cell.Index().Item2);
             _hoveredInvItem = cell.Item();
-            
+
 
         }
         public void ClearHoveredCell()
