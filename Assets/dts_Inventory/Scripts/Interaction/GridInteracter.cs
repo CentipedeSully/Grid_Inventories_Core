@@ -15,14 +15,25 @@ namespace dtsInventory
         [Tooltip("Where pinned stacks/items will live. This object will follow the mouse (when applicable)")]
         [SerializeField] private RectTransform _pointerContainer;
         [SerializeField] private TextMeshProUGUI _pinnedText;
+        [SerializeField] private GridHoverVisualizer _hoverVisualizer;
+        [SerializeField] private AudioSource _audioSource;
 
         private Vector3 _mousePosition;
+
+        [Header("Settings")]
+        [SerializeField] public float _audioVolume = 1.0f;
+        [Tooltip("This plays whenever the pointer enters a new cell. Its multiplied by 'Audio Volume' above. This is separated because its likely " +
+            "this sound'll play VERY frequently. Try setting this value low to avoid annoying the user.")]
+        [SerializeField] public float _cellMovementVolume = 1.0f;
+        [SerializeField] private AudioClip _cellMovementAudio;
+        [SerializeField] private AudioClip _rotateAudio;
 
         [Header("Pinned Item")]
         [SerializeField] private RectTransform _pinnedRectTransform;
         [SerializeField] private InvItem _pinnedItem;
         [SerializeField] private int _pinnedAmount;
         private Vector2 _tileSize = Vector2.zero;
+        private HashSet<(int, int)> _pinnedItemHoverArea;
 
         [Header("Watch States (Don't Touch)")]
         [SerializeField] private InvGrid _hoveredGrid;
@@ -158,6 +169,9 @@ namespace dtsInventory
 
         private void UpdateFromDetectedChanges(InvContentsUpdate update)
         {
+            if (_hoverVisualizer != null)
+                _hoverVisualizer.ClearAllHoveredCells();
+
             //for each position that was updated, if our position was affected, then update the hovered item state
             foreach(HashSet<(int,int)> stackArea in update.stackAreasAffected)
             {
@@ -167,7 +181,75 @@ namespace dtsInventory
                     break;
                 }
             }
+
+            DrawHoverEffects();
         }
+
+        private void DrawHoverEffects()
+        {
+            if (_hoverVisualizer != null)
+            {
+                //do we NOT have an item currently pinned?
+                if (_pinnedItem == null)
+                {
+                    //if we aren't hovering over an item, then only show the hover effect at our currend hovered position
+                    if (_hoveredInvItem == null)
+                        _hoverVisualizer.CreateHoverOnCell(_hoveredCell.Index());
+                    
+                    //otherwise, show a hover effect over each of the detected item's grid occupancy
+                    else
+                    {
+                        foreach ((int, int) position in _hoveredGrid.GetStackArea(_hoveredCell.Index()))
+                            _hoverVisualizer.CreateHoverOnCell(position);
+                    }
+                }
+
+                //an item is pinned. The default hover effects should reflect the item's possible placement position
+                else
+                {
+                    //calculate the cells our pinned item is hovering over
+                    _pinnedItemHoverArea = _hoveredGrid.ConvertSpacialDefIntoGridArea(_hoveredCell.Index(), _pinnedItem.GetSpacialDefinition(), _pinnedItem.ItemHandle());
+
+                    //only show hover effects if every cell is within the grid
+                    if (_hoveredGrid.IsAreaWithinGrid(_pinnedItemHoverArea))
+                    {
+                        foreach ((int, int) position in _pinnedItemHoverArea)
+                            _hoverVisualizer.CreateHoverOnCell(position);
+                    }
+                }
+            }
+        }
+
+        private void ClearHoverEffects()
+        {
+            if (_hoverVisualizer != null)
+            {
+                _hoverVisualizer.ClearAllHoveredCells();
+            }
+        }
+
+        private void PlayAudio(AudioClip clip, bool isCellMovementAudio = false)
+        {
+            if (clip == null)
+            {
+                Debug.LogWarning("Attempted to play a null audio clip. Ignoring PlayAudio Request.");
+                return;
+            }
+
+            if (_audioSource == null)
+            {
+                Debug.LogWarning("Attempted to play an audioClip while no audioSource is set. Ignoring PlayAudio Request.");
+                return;
+            }
+
+            if (!isCellMovementAudio)
+                _audioSource.PlayOneShot(clip, _audioVolume);
+
+            else
+                _audioSource.PlayOneShot(clip, _audioVolume * _cellMovementVolume);
+        }
+
+
 
         //externals
         public void SetMousePosition(Vector3 newPosition)
@@ -176,14 +258,21 @@ namespace dtsInventory
         }
         public void SetHoveredGrid(InvGrid grid)
         {
+            
             if (grid == null)
             {
                 Debug.LogWarning("Attempted to set a null grid as hovered. Ignoring set request.");
                 return;
             }
 
+            if (grid == _hoveredGrid)
+            {
+                //Debug.LogWarning("grid Already set as hovered. Ignoring set request.");
+                return;
+            }
+
             _hoveredGrid = grid;
-            
+            _hoverVisualizer = grid.GetHoverVisualizer();
             SubscribeToEnteredGrid();
 
             //resize the pinned item, in case we just entered a grid of differently-sized cells
@@ -233,37 +322,63 @@ namespace dtsInventory
             //always ensure this it updated anyway
             _tileSize = _hoveredGrid.CellSize();
 
+            _pinnedText.GetComponent<RectTransform>().SetAsLastSibling();
+
+            
+
             
         }
         public void ClearHoveredGrid()
         {
+            
             if (_hoveredGrid != null)
             {
+                
                 UnsubscribeFromGrid();
+                ClearHoverEffects();
                 _hoveredGrid = null;
+                _hoverVisualizer = null;
             }
         }
         public void SetHoveredCell(CellInteract cell)
         {
+            
             if (cell == null)
             {
                 Debug.LogWarning("Attempted to set a null cell as hovered. Ignoring set request.");
                 return;
             }
-                
+
+            if (_hoveredCell != null)
+                ClearHoveredCell();
+           
             _hoveredCell = cell;
             _hoveredCellPosition = new Vector2(cell.Index().Item1, cell.Index().Item2);
             _hoveredInvItem = cell.Item();
 
 
+            if (_hoveredGrid == null)
+            {
+                SetHoveredGrid(_hoveredCell.Grid());
+            }
+            DrawHoverEffects();
+
+            PlayAudio(_cellMovementAudio, true);
+
+
         }
         public void ClearHoveredCell()
         {
+            
             if (_hoveredCell != null)
             {
+                ClearHoverEffects();
+
                 _hoveredCell = null;
                 _hoveredCellPosition = -Vector2.one;
                 _hoveredInvItem = null;
+
+                
             }
         }
 
@@ -297,6 +412,9 @@ namespace dtsInventory
 
                 //remove the stack from the grid
                 _hoveredGrid.RemoveItem(_hoveredCell.Index(), _pinnedAmount);
+
+                //play the pinned item's pickup audio
+                PlayAudio(_pinnedItem.ItemData().OnPickupAudioClip());
                 return;
             }
         }
@@ -330,6 +448,9 @@ namespace dtsInventory
 
                 //remove the stack from the grid
                 _hoveredGrid.RemoveItem(_hoveredCell.Index(), _pinnedAmount);
+
+                //play the pinned item's pickup audio
+                PlayAudio(_pinnedItem.ItemData().OnPickupAudioClip());
                 return;
             }
         }
@@ -371,6 +492,9 @@ namespace dtsInventory
 
                 //remove the stack from the grid
                 _hoveredGrid.RemoveItem(_hoveredCell.Index(), _pinnedAmount);
+
+                //play the pinned item's pickup audio
+                PlayAudio(_pinnedItem.ItemData().OnPickupAudioClip());
                 return;
             }
         }
@@ -401,11 +525,15 @@ namespace dtsInventory
                     //if position is completely empty, place here
                     if (itemCount == 0)
                     {
+                        //play the pinned item's drop audio
+                        PlayAudio(_pinnedItem.ItemData().OnDropAudioClip());
 
-                        //PlayItemDropAudio();
                         _hoveredGrid.AddItem(_pinnedItem.ItemData(), _pinnedAmount, _hoveredCell.Index(), _pinnedItem.Rotation());
                         ClearPinnedAmount(_pinnedAmount);
                         UpdatePinnedStackText();
+
+                        
+
                         return;
                     }
 
@@ -427,7 +555,9 @@ namespace dtsInventory
                                     //place all held items here if the stack can take it
                                     if (_pinnedAmount <= openCapacity)
                                     {
-                                        //PlayItemDropAudio();
+                                        //play the pinned item's drop audio
+                                        PlayAudio(_pinnedItem.ItemData().OnDropAudioClip());
+
                                         _hoveredGrid.AddItem(_pinnedItem.ItemData(), _pinnedAmount, index, _pinnedItem.Rotation());
                                         ClearPinnedAmount(_pinnedAmount);
 
@@ -439,7 +569,9 @@ namespace dtsInventory
                                     //otherwise, only place enough items to fill the stack here. Don't clear the held item yet, since we have some left.
                                     else
                                     {
-                                        //PlayItemDropAudio();
+                                        //play the pinned item's drop audio
+                                        PlayAudio(_pinnedItem.ItemData().OnDropAudioClip());
+
                                         _hoveredGrid.AddItem(_pinnedItem.ItemData(), openCapacity, index, _pinnedItem.Rotation());
                                         ClearPinnedAmount(openCapacity);
                                         UpdatePinnedStackText();
@@ -453,7 +585,8 @@ namespace dtsInventory
                                 //otherwise, swap the stacks
                                 else
                                 {
-                                    //PlayItemDropAudio();
+                                    //play the pinned item's drop audio
+                                    PlayAudio(_pinnedItem.ItemData().OnDropAudioClip());
 
                                     //save the found item's data
                                     InvItem newGraphic = _hoveredGrid.GetInvItemOnCell(index);
@@ -505,7 +638,9 @@ namespace dtsInventory
                                     //place all held items here if the stack can take it
                                     if (_pinnedAmount <= openCapacity)
                                     {
-                                        //PlayItemDropAudio();
+                                        //play the pinned item's drop audio
+                                        PlayAudio(_pinnedItem.ItemData().OnDropAudioClip());
+
                                         _hoveredGrid.AddItem(_pinnedItem.ItemData(), _pinnedAmount, index, _pinnedItem.Rotation());
                                         ClearPinnedAmount(_pinnedAmount);
 
@@ -518,7 +653,7 @@ namespace dtsInventory
                                     //otherwise, only place enough items to fill the stack here. Don't clear the held item yet, since we have some left.
                                     else
                                     {
-                                        //PlayItemDropAudio();
+
                                         _hoveredGrid.AddItem(_pinnedItem.ItemData(), openCapacity, index, _pinnedItem.Rotation());
                                         ClearPinnedAmount(openCapacity);
                                         UpdatePinnedStackText();
@@ -691,17 +826,30 @@ namespace dtsInventory
             }
         }
 
+        
 
 
         public void RotateClockwise()
         {
             if (_pinnedItem != null)
+            {
                 _pinnedItem.RotateItem(RotationDirection.Clockwise);
+                ClearHoverEffects();
+                DrawHoverEffects();
+                PlayAudio(_rotateAudio);
+
+
+            }
         }
         public void RotateCounterClockwise()
         {
             if (_pinnedItem != null)
+            {
                 _pinnedItem.RotateItem(RotationDirection.CounterClockwise);
+                ClearHoverEffects(); 
+                DrawHoverEffects();
+                PlayAudio(_rotateAudio);
+            }
         }
 
         public void SubscribeToEnteredGrid()
@@ -738,10 +886,13 @@ namespace dtsInventory
             
             Debug.LogWarning("Unexpected grid deletion detected. Unsubscribing from grid before deletion occurs...");
             UnsubscribeFromGrid();
-            ClearHoveredGrid();
             ClearHoveredCell();
+            ClearHoveredGrid();
+            
             Debug.LogWarning("Unsub successful. grindInteracter state updated.");
         }
+
+
         //debug
 
         private void LogGridOnChangedActivity(InvContentsUpdate update)

@@ -75,6 +75,7 @@ namespace dtsInventory
         private IEnumerator _textUpdater;
 
         [Header("References")]
+        [SerializeField] private GridHoverVisualizer _hoverVisualizer;
         [SerializeField] private GameObject _cellPrefab;
         [Space(20)]
         [SerializeField] private RectTransform _spritesContainer;
@@ -2916,22 +2917,23 @@ namespace dtsInventory
                     " extremely child-order sensitive and is managed internally. Create a new container for yor own purposes instead.");
                 return;
             }
+            Vector3 containerPosition = containerLayer.position;
 
             //reparent the uiObject onto the grid visually
             //Get the position of the hovered cell, local to the grid
-            Vector3 parentCellPosition = GetCellObject(overlayPosition).GetComponent<RectTransform>().localPosition;
+            Vector3 cellPosition = GetCellObject(overlayPosition).GetComponent<RectTransform>().localPosition;
 
 
             //parent the object to the grid's overlay container
-            overlayObject.SetParent(containerLayer, false);
-            overlayObject.localPosition = parentCellPosition;
+            overlayObject.SetParent(containerLayer.GetComponent<Transform>(),false);
+            overlayObject.localPosition = cellPosition;
 
             //ensure the graphic fits the cell's size
             if (fitToCellSize)
                 overlayObject.sizeDelta = new Vector2(CellSize().x, CellSize().y);
 
         }
-
+        public GridHoverVisualizer GetHoverVisualizer() { return _hoverVisualizer; }
 
         //Debug
         /// <summary>

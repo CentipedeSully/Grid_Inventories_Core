@@ -67,7 +67,6 @@ namespace dtsInventory
 
 
 
-
         public ItemData ItemData() { return _itemData; }
         public void SetItemData(ItemData newItemData)
         {
