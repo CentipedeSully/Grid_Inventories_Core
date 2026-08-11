@@ -161,7 +161,8 @@ namespace dtsInventory
         [Tooltip("Decreases the width and height of the grid by specific values. The specific values are defined by [ColumnRowAdjustment].")]
         [SerializeField] private bool _cmdReduceGrid = false;
 
-        
+        [Tooltip("Resizes the Grid to match a set size. The specific value is defined by [ColumnRowAdjustment].")]
+        [SerializeField] private bool _cmdResizeGrid = false;
 
 
 
@@ -2622,7 +2623,9 @@ namespace dtsInventory
         /// </summary>
         /// <param name="xPositions">The (positive) amount of width positions to append.</param>
         /// <param name="yPositions">The (positive) amount of height positions to append.</param>
-        public void ExpandGrid(int xPositions, int yPositions)
+        /// <param name="suppressResizeEvent">If true, silences the OnResize event. Useful if you're performing many resizes per frame, and dont want
+        /// to spam event-responses before your entire resize is complete.</param>
+        public void ExpandGrid(int xPositions, int yPositions, bool suppressResizeEvent = false)
         {
             //ensure we're accepting no negative values
             xPositions = Mathf.Max(xPositions, 0);
@@ -2678,7 +2681,8 @@ namespace dtsInventory
                 StartCoroutine(_textUpdater);
             }
 
-            OnGridResized?.Invoke(_containerSize);
+            if (!suppressResizeEvent)
+                OnGridResized?.Invoke(_containerSize);
 
         }
 
@@ -2689,7 +2693,9 @@ namespace dtsInventory
         /// </summary>
         /// <param name="xPositions">The (positive) amount of width positions to trim.</param>
         /// <param name="yPositions">The (positive) amount of height positions to trim.</param>
-        public void ReduceGrid(int xPositions, int yPositions)
+        /// <param name="suppressResizeEvent">If true, silences the OnResize event. Useful if you're performing many resizes per frame, and dont want
+        /// to spam event-responses before your entire resize is complete.</param>
+        public void ReduceGrid(int xPositions, int yPositions, bool suppressResizeEvent = false)
         {
             //ensure we're accepting no negative values
             xPositions = Mathf.Max(xPositions, 0);
@@ -2763,7 +2769,101 @@ namespace dtsInventory
                 StartCoroutine(_textUpdater);
             }
 
-            OnGridResized?.Invoke(_containerSize);
+            if (!suppressResizeEvent)
+                OnGridResized?.Invoke(_containerSize);
+
+        }
+
+        /// <summary>
+        /// Resizes the grid to match the given dimensions. Dimesions less than zero will be deafulted to 1. Utilitizes 
+        /// the 'Expand/Reduce Grid' methods internally.
+        /// </summary>
+        /// <param name="newContainerDimensions"></param>
+        public void ResizeGrid(Vector2Int newContainerDimensions)
+        {
+            if (newContainerDimensions.x < 1)
+            {
+                Debug.LogWarning($"Attempted to resize container '{name}' width below 1. Defaulting to 1. ");
+                newContainerDimensions.x = 1;
+
+            }
+            if (newContainerDimensions.y < 1)
+            {
+                Debug.LogWarning($"Attempted to resize container '{name}' height below 1. Defaulting to 1. ");
+                newContainerDimensions.y = 1;
+            }
+
+            int widthResizeDirection = 0;
+            if (newContainerDimensions.x < _containerSize.x)
+                widthResizeDirection = -1;
+            else if (newContainerDimensions.x > _containerSize.x)
+                widthResizeDirection = 1;
+
+            int heightResizeDirection = 0;
+            if (newContainerDimensions.y < _containerSize.y)
+                heightResizeDirection = -1;
+            else if (newContainerDimensions.y > _containerSize.y)
+                heightResizeDirection = 1;
+
+            //reduce the width and...
+            if (widthResizeDirection < 0)
+            {
+                //reduce both width and height
+                if (heightResizeDirection < 0)
+                    ReduceGrid(_containerSize.x - newContainerDimensions.x, _containerSize.y - newContainerDimensions.y);
+
+                //reduce the width, expand the height
+                else if (heightResizeDirection > 0)
+                {
+                    ReduceGrid(_containerSize.x - newContainerDimensions.x, 0,true);
+                    ExpandGrid(0, newContainerDimensions.y - _containerSize.y);
+                }
+
+                //only reduce the width
+                else
+                {
+                    ReduceGrid(_containerSize.x - newContainerDimensions.x, 0);
+                }
+            }
+
+            //expand width and...
+            else if (widthResizeDirection > 0)
+            {
+                //expand both width and height
+                if (heightResizeDirection > 0)
+                    ExpandGrid(newContainerDimensions.x - _containerSize.x, newContainerDimensions.y - _containerSize.y);
+
+                //expand the width, reduce the height
+                else if (heightResizeDirection < 0)
+                {
+                    ExpandGrid(newContainerDimensions.x - _containerSize.x, 0, true);
+                    ReduceGrid(0, _containerSize.y - newContainerDimensions.y);
+                }
+
+                //only expand the width
+                else
+                {
+                    ExpandGrid(newContainerDimensions.x - _containerSize.x, 0);
+                }
+            }
+
+            //leave width alone but...
+            else
+            {
+                //expand the height
+                if (heightResizeDirection > 0)
+                    ExpandGrid(0, newContainerDimensions.y - _containerSize.y);
+
+                //reduce the height
+                else if (heightResizeDirection < 0)
+                {
+                    ReduceGrid(0, _containerSize.y - newContainerDimensions.y);
+                }
+
+                //dont expand or reduce anything if the current container size is the same as the requested size
+                //...
+            }
+
 
         }
 
@@ -2982,6 +3082,11 @@ namespace dtsInventory
             {
                 _cmdReduceGrid = false;
                 ReduceGrid(_paramColumnRowAdjustment.x, _paramColumnRowAdjustment.y);
+            }
+            if (_cmdResizeGrid)
+            {
+                _cmdResizeGrid = false;
+                ResizeGrid(_paramColumnRowAdjustment);
             }
 
             if (_cmdAddItem)
