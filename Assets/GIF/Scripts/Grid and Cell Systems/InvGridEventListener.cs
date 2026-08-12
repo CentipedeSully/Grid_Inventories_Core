@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 
-namespace dtsInventory
+namespace GIF
 {
     /// <summary>
     /// This class listens to an InvGrid's internal events and triggers the corresponding UnityEvents in response to the original Grid's internal events.

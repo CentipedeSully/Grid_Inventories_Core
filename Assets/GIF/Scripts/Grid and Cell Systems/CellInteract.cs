@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 
 
-namespace dtsInventory
+namespace GIF
 {
     public class CellInteract : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
     {

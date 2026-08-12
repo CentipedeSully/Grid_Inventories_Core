@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-namespace dtsInventory
+namespace GIF
 {
     public class GridInteract : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
     {

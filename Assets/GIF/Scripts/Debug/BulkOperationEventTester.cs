@@ -1,11 +1,11 @@
-using dtsInventory;
+using GIF;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-namespace dtsInventory
+namespace GIF
 {
     [Serializable]
     /// <summary>

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
 
-namespace dtsInventory
+namespace GIF
 {
     public class EventSignalLogger : MonoBehaviour
     {

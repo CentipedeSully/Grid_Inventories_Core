@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 
-namespace dtsInventory
+namespace GIF
 {
     public enum ItemRotation
     {

@@ -11,7 +11,7 @@ using UnityEngine.UIElements;
 using static UnityEditor.Progress;
 
 
-namespace dtsInventory
+namespace GIF
 {
 
     public enum InvOperation

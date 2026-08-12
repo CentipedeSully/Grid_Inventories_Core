@@ -4,7 +4,7 @@ using UnityEngine.UI;
 
 
 
-namespace dtsInventory
+namespace GIF
 {
     public class ItemCreator : MonoBehaviour
     {

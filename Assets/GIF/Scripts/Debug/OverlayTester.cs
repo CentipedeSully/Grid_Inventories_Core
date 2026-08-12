@@ -1,9 +1,9 @@
-using dtsInventory;
+using GIF;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace dtsInventory
+namespace GIF
 {
     public class OverlayTester : MonoBehaviour
     {

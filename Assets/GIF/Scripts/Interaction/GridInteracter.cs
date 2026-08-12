@@ -6,7 +6,7 @@ using TMPro.SpriteAssetUtilities;
 using Unity.VisualScripting.Antlr3.Runtime;
 using UnityEngine;
 
-namespace dtsInventory
+namespace GIF
 {
     public class GridInteracter : MonoBehaviour
     {

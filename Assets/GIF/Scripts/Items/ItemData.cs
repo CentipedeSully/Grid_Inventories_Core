@@ -3,7 +3,7 @@ using System.Linq;
 using UnityEngine;
 
 
-namespace dtsInventory
+namespace GIF
 {
 
     [CreateAssetMenu(fileName = "ItemData")]
