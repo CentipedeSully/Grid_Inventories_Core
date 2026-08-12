@@ -182,6 +182,7 @@ namespace dtsInventory
                     return data;
             }
 
+            Debug.LogWarning($"Attempted to find an itemData from itemCode '{code}', but code not found. returning null");
             return null;
         }
 

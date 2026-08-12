@@ -1,0 +1,80 @@
+Architecture of the Item Data
+
+
+= ItemData Structure =
+
+All items are defined by their itemData- no item exists without an itemData.
+The itemData defines the following fields for an item:
+
+- Name [string]
+o The in-game name of the item.
+
+- ItemCode [string]
+o The shorthand, unique identifier of the item. Each itemData should have a unique itemcode.
+
+- SpacialDefinition [List<Vector2Int>]
+o The representation of the item's size and volume, defined in (x,y) positions. These
+positions tell the InvGrid class the size and shape of the object. 
+
+- Item Handle [Vector2Int]
+o The origin position of the item relative to the item's spacial position. This position
+doesn't need to be within the spacial definition itself, but typically is. The item's
+pivot point is defined by this cell position on the item.
+
+- Description [string]
+o The in-game description of the item.
+
+- Sprite
+o The graphical image of the item.
+
+- Stack Limit [int]
+o The amount of this item that can be stacked together in the same position.
+
+- Value
+o The item's value/cost.
+
+- OnPickupAudio
+o The audio clip that should play when the user picks up the item while in the grid.
+
+- OnDropAudio
+o The audio clip that should play when the user places the item onto a grid.
+
+
+Each instance of an item refers to a shared ItemData-- changing an itemData changes all instances of that item. 
+
+
+- Note for later about Rotating Items -
+ItemDatas also define how their items are rotated, and they can even calculate the rotated spacial
+definitions of their items if requested. But an item's current rotation is defined by its InvItem's 'Rotation',
+and isn't considered 'rotated' until you call the InvItem's 'RotateItem' method.
+
+
+
+
+
+= InvItem and the ItemCreator = 
+
+Upon creation, the itemCreator creates an InvItem from all of the fields mentioned above. This InvItem
+is what is given to an InvGrid.
+
+InvItems defer to their respective ItemDatas for most information, but InvItems possess their own
+instanced Rotation and physical gameObject; the InvItem is the tangible thing that the user interacts with in game.
+
+To create new InvItems, you should always defer to the ItemCreator (or static ItemCreatorhelper class). Simply
+run ItemCreatorHelper's 'CreateItem' method from anywhere to do this. 
+
+When you're done with the InvItem, you may call the ItemCreatorHelper's 'ReturnItemToCreator' method.
+
+For more information about creating/destorying items, see the '_InstantiatingItems' document.
+
+
+The ItemCreatorhelper is a static utility, but it relies on an active ItemCreator in your scene. Always be sure
+to keep a single ItemCreator active in your scene, and be sure that itemCreator has a list of all of your itemdatas.
+
+[ If your project gets larger, you may refactor the code to read the ItemData directly from your Resources folder.
+This behaviour is not default due to scope management. But it is certainly possible, and recommended if you plan to have
+30+ items. ]
+
+
+
+

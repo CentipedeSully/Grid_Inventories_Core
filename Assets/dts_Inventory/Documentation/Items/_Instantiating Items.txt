@@ -1,0 +1,37 @@
+Instantiating Items
+
+
+= Using the ItemCreator =
+The ItemCreator was designed to be easy to use. To create any item, simply call the
+following method:
+
+- ItemCreatorHelper.CreateItem ( ItemData itemdata, float cellWidth, float cellHeight )
+o This creates, initializes, and resizes a new gameObject with a ready InvItem component attached.
+
+All prebuild utilities use this method to create (and destory) items. To Destroy an item, call the
+following method:
+
+- ItemCreatorHelper.ReturnItemToCreator ( InvItem item )
+o This actually deactivates and stores the given item in a specified container for recycling later.
+
+
+Note that you don't need a reference to the ItemCreator to create/destroy items. For this to work, you need
+a single ItemCreator active in your scene with a populated list of all of your itemDatas. 
+
+Both the ItemCreator and ItemCreatorHelper will tell you if you're missing anything references via yellow errors,
+so keep them turned on.
+
+
+
+
+You may also look up itemDatas from a provided itemCode using the following method:
+
+- GetItemDataFromItemCode( string code )
+o returns a correlating itemData from a provided itemCode. Throws a yellow error and returns null if the code doesn't exist.
+
+
+
+Both the ItemCreator and the ItemCreatorHelper have a few more specialized methods to aid in debugging, but their core
+purpose remains to simplify creating & removing items.
+
+

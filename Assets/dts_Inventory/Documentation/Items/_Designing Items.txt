@@ -1,0 +1,52 @@
+Designing Items
+
+
+Here's how to design and create new items from start to finish.
+
+1) Create an new itemData (ScriptableObject) asset in your project files that'll 
+   represent the new item template. This asset defines and represents all 
+   instances of the item. Changing an itemData changes all instances of the item,
+   and all created items refer back to their itemData for their data.
+   [Right-Click -> Create -> Item Data] in your project folder.
+
+2) Fill out the newly-created itemData. To see what each field of the ItemData represents,
+   visit the "_ArchitectureOfItemData" document. It covers each property and its use in detail.
+
+3) Draw the item's sprite:
+   The default cell size for the prefab Grid is 32x32 pixels.
+   That can be easily changed in the grid object's grid component.
+   If you want an object's sprite to span multiple cells and be visually consistent with your
+   previously-defined spacial definition, then you'll need to resize your canvas to match the item's 
+   pixel size from the start. Meaning you'll first define your item's spacial definition, then you'll 
+   identify your desired cellSize in your grids. From there, you'll then calculate that item's canvas size.
+   Here's examples of how to do that.
+
+   Ex: The default 'Cube' item has a (1x1) spacial definition. The specified cellsize is 32x32 pixels (defined in the grid).
+       So, the cube's canvas size needs to be 32x32 pixels (or any ratio that's 1x1, since its single-celled). 
+       
+       Boards are defined with a (4x1) spacial definition, so THEIR canvas needs to also be at a ratio of 4x1 [128x32 pixels 
+       if we're going the pixel perfect route].
+       
+       "Things" (the weird, tall statue-like objects) are (1x2) in their spacial definition, so their canvases are at a ratio
+       of 1x2 (32x64 pixels).
+       
+       The Hollow is a large (3x3) item. Can you infer that item's canvas ratio? 
+       
+
+   Here's your exact item's SpriteSize formula:
+       - canvas dimensions = cellWidth * cellSize , cellHeight * cellSize  [where cellSize is your grid's defined cell size]
+
+4) Once your sprite is drawn and added to the ItemData, your item is completed. To test it, simply add it to your ItemCreator's
+   'ItemsList' list and enter playmode.
+
+   The InvGrid comes with debug methods to add and remove items. Ensure your itemdata is set in the 'Param Item Data' debug property,
+   and then click the "Add Item" box. 
+
+   Your item should appear within the grid (if there's room for it to fit).
+   
+   From there, you may click on the item to pick it up and rClick to place it back down, and use Q and E to rotate the item (when picked up).
+   Debug moving it around as you see fit. (assuming you haven't changed the scene's default input settings [also assuming the input method
+   is compatible with your project if your importing this package into a preexisting project])
+
+   Congratulations. You've created your first custom item!
+

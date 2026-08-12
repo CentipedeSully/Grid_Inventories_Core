@@ -1,0 +1,35 @@
+Rotating Items
+
+
+When an InvItem gets rotated, it transforms both its entire spatial definition AND its own gameobject's rotation
+to fit the requested rotation state.
+
+Here are the default rotation states:
+
+*****
+public enum ItemRotation
+{
+    None, //0 or 360
+    Once, //90
+    Twice, //180
+    Thrice, //270
+}
+
+
+
+public enum RotationDirection
+{
+    Clockwise,
+    CounterClockwise
+}
+*****
+
+These enums are used to tell InvItems how to rotate themselves.
+
+
+Rotations are calculated in the ItemData class by a couple statis utilities,
+and generally speaking, you shouldn't have a need to mess with them.
+
+
+To rotate an item, simply call the InvItem's 'RotateItem (RotationDirection direction)' method,
+and the rotation and transformations will happen by themselves.
