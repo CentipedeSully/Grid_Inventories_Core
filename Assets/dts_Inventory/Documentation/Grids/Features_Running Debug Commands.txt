@@ -47,7 +47,7 @@ The uncaught cases may cause red errors.
 
 During development, 
 In General, do your best to always check if your giving safe parameters to methods. Some scripts may catch the bad-parameter
-errors, but thay may vary from script to script.
+errors, but that may vary from script to script.
 
 I did my best to anticipate poor parameters with most of the utilities, but there may be gaps in some unexpected cases.
 If you happen across any, please reach out to me so I can remedy the specific cases.

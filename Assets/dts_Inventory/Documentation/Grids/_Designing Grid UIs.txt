@@ -6,45 +6,15 @@ Designing Grid Uis
 The InvGrid was designed to be a subElement for a larger UI system;
 Embed it into your own Ui to suit your vision. 
 
-This system isn't meant to be served to a user raw. 
-
-If you don't already have a vision established for your project, then 
-here are a few suggestions on what to add around you grid systems;
-
- o Pointer Support. You may want a foundational point-and-click interaction system for your 
-   grid inventories. Try covering the following cases when designing this system
-    - Simple pick-up and drop functionality (for visually reorganizing grids/inventories).
-    - Perhaps a 'context menu' for interacting with grid items.
-    - Maybe even a system for transfering items between grids (if your scope allows it).
-
- o Directional Support. Perhaps you want directional navigation for gamepads or directional
-   keys? 
-
- o Context Menu. Again you might need a context menu to show all possible uses for a selected item.
-
- o Numerical Selector. Maybe you need a popup to ask 'how many' items need to be used/dropped?
+This system isn't meant to be served to a user raw. You may want, for example, window
+management buttons and labels (at the very minimum).
 
 
+The package comes prepackaged with a Pointer-based interaction utility referred to as the
+'GridInteracter', when reads input from the prepackaged 'InputDriver' script.
 
-
-
-- Why doesn't this package come with a built-in interaction system
--------------------------------------------------------------------
-
-Originally this package DID contain all of the previously-mentioned systems. Unfortunately, 
-we ran into a paradox; When we added more systems to the package (for convenience), the package
-became LESS CONVENIENT for projects that already had their own UI interaction system (for
-projects that only need the base grid system).
-
-To accomodate for this problem, we decided to serve the base grid system as a separate, isolated
-package. This way developers can just import the grid system and then design UI that fits their needs-
-no dismantling required. (It's safer to build off something then tear away the parts you need.)
-
-
-
-- Want an Interaction System too?
--------------------------------------
-
-We plan on reintroducing the interaction system as a separate package after this core is released, 
-so if you need that too then its already on the way :)
+It's expected that you'll be using your own input method for your project, so (assuming you'll
+use the prepackaged GridInteracter to start with) the GridInteracter was designed separately
+from the InputDriver. Simply hook up your own input methods to the interacter and you have your
+own custom GridInteracter working.
 

@@ -44,20 +44,23 @@ o (VERY BOTTOM)(Inspector Preview) Preview container
 o (Bottom) Grid container
 o Item Graphics container
 o Stack Texts container
-o pooled texts container (keep this deactivated)
-o (Top) Auxillary Overlay container
+o pooled, inactive texts container (keep this deactivated)
+o Hover Overlay container
+o (Top) pooled, inactive Hover effects container (keep this deactivated)
 
 
 - The Preview container holds 2 things; the grid's border graphic and a placeholder for the cells area. This container is 
 responsible for visualizing InvGrid's size. It's driven by the "GridPreviewVisualizer" script (Located on the Parent container by default),
 which reads the InvGrid to infer its expected size. 
 
-You can resize the preview anytime by rClicking the GridPreviewVisualizer -> "Update Preview".
+You can resize the preview anytime by rClicking the GridPreviewVisualizer -> "Update Preview". You may also automate doing this by hooking 
+this method up to your custom scripts. By default, The InvGridEventListener runs this method whenever the 'OnGridResized' event is detected.
 
 - The Grid container holds the core InvGrid script along with other support scripts. OnStart, the InvGrid creates a collection of children
 gameobjects that serve as visual cells (each cell object also contains a CellInteract script; useful primarily to detect pointer 
 hovering & drive pointer interaction). Do not manipulate this layer of the cake. Each child's placement is deliberate, and you'll
-confuse the grid if you reorder the cells-- especially if you attempt to expand/reduce the grid's size. 
+confuse the grid if you reorder the cells (or add/remove other gameObjects). You'll notice the confusion afterwards when you attempt to 
+expand/reduce the grid's size. 
 
 - The Item Graphics container holds collected InvItems. These items are methodically placed onto the grid based on the item's size and
 rotation (and placement offset). It's also recommended that you don't modify this layer, else you'll risk visual-inconsistency related
@@ -71,19 +74,33 @@ references that gameObject's 'InvItem' script, too. You'll definitely see Red Er
 - The Stack Texts container holds every stack's numerical display. You need this to show the values of each stack. Treat this layer just like
 how you'd treat the previously-mentioned Item Graphics container. Adding gameobjects is probably fine, but deleting them is not.
 
-- The pooled texts container holds deactivated text objects. This container could theoretically exist anywhere in the cake. It should
-always be deactivated, so it won't matter. Just make sure it exists, else the text objects won't recycle properly. Do not add any gameobjects
+- The pooled texts container holds deactivated text objects. This container could theoretically exist anywhere in the cake-- It should
+always be deactivated, so it doesn't matter where. Just make sure it exists, else the text objects won't recycle properly. Do not add any gameobjects
 to this container. Every gameObject here is assumed to be a deactivated text object.
 
-- The Auxillary container exists for you. If you want to add overlay effects (visual dimming effects, for example), then you can put them here.
-Otherwise, this layer doesn't do anything. You may delete it if you wish.
+- The Hover container exists to overlay hover effects. Like the Stack Texts Container, its managed by the grid (its actually driven by the provided 
+GridInteracter [located on the topmost 'InventoryUi' gameObject] in combination with the the Hover container's own 'GridHoverVisualizer' script component). 
+Just like the Stack Texts Container, do not remove any existing objects from this container manually. You may add your own miscellaneous objects within 
+this container, but do not remove the pregenerated ones, else you'll encounte errors.
 
+- The pooled hover effects container holds deactivate hover effects. Like to earlier pooled texts container, this could also theoretically 
+exist anywhere, since it should always be deactivated. You should not add any objects within this container. Just like the pooled text container, 
+all items within this container are assumed to be deactivated hover effects-- adding an item here may result in the wrong item being grabbed and used
+as a hover effect during runtime.
+
+- Your custom containers. You may add your own containers to the grid too. Add them wherever you'd like to suit your needs. Just be sure to add your
+container objects to the InvGrid's 'OtherContainers' list, so the grid will resize them all whenever its dimensions change.
+
+If you need to place custom graphics within your custom containers, you may use the InvGrid's 'OverlayRectTransformOntoGrid' method. Specify your
+graphic, the target container layer, the cell position you wnat the graphic centered on, and whether or not you want the graphic scaled to the grid's
+cell size. There also exists an 'Overlay Tester' script that can help you get comfortable moving graphics around your layers via inspector. An object
+already exists in the scene that's dedicated to doing this (Called the 'OverlayTester'). You may delete it if you wish.
 
 
 * More on the layer containers
 OnStart, every container is resized to fit the grid. It's very important for each container to match the grid's size,
-otherwise graphics wont align properly. If you choose to add more layers (you're more than welcomed to), you may need to
-ensure your layers also resize to match the Parent container's size. 
+otherwise graphics wont align properly. If you choose to add more layers (you're more than welcomed to), be sure to
+add them to the InvGrid's 'OtherContainers' list so they get resized whenever the grid is resized.
 
 Also, you may notice that in the editor the layers don't actually match the preview. They'll be resized by the InvGrid OnStart.
 

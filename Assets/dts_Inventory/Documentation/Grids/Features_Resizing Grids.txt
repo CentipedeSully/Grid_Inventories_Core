@@ -1,0 +1,19 @@
+Resizing Grids
+
+
+To resize an initialized grid, call the InvGrid's 'ResizeGrid' method.
+
+You may also call the more tedious 'ExpandGrid' or 'ReduceGrid' methods,
+though these methods existed before the earlier mentioned method, and now serve as 
+building blocks for the above, more convenient 'ResizeGrid' method.
+
+Note that whenever the grid gets resized, the OnGridResized Event is raised.
+Like the OnContentsChanged event, this event may also be suppressed. Also
+keep in mind that resizing the grid creates/destroys cells, so if you're resizing large
+containers very frequently (or resizing very large containers), you may notice a 
+temporary performance drop.
+
+Also worth noting, if you spacefinding within very large grids, that'll also hurt your performance.
+The algorithm checks every cell at every rotation for each item you're querying. That adds up
+exponentially when searching through grids with hundreds of cells. So try to reserve your spacefinding
+for critical tasks only if you need to spacefind for Noticeably larger containers.

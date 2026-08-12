@@ -1,0 +1,93 @@
+Querying Items
+
+
+If you'd like to know what is were in a grid, you have many tools at your disposal.
+Here's a list of the most practical methods that you can use to query the grid:
+
+
+
+- IsEmpty ()
+o returns true if no items exist in the grid.
+
+
+- CountItem ( ItemData itemToCount )
+o returns the number of the specified item that exist in the grid.
+
+
+- DoesItemExist ( ItemData item, int amount, out Dictionary<HashSet<(int,int)>,int> detectedArea )
+o returns true if the requested amount of items exist in the grid.
+* Also provides the first-detected stack(s) that met the request, if you need them. Null if false.
+
+
+- DoesSpaceExist ( List<ItemQuery> queryList )
+o returns true if space exists for your entire list of queries. False otherwise. See the 'Features_FindingSpaceForItems' document
+for more details about the structure of spaceFinding data object.
+
+
+- FindSpaceForItems ( List<ItemQuery> queryList )
+o returns a list of ItemQueryResponse(s) in response to every given query. Only if every query was fulfilled.
+Otherwise returns null. See the 'Features_FindingSpaceForItems' document for more details about the structure of
+the ItemQueryResponse data structure.
+
+
+- FindSpaceForStack ( ItemData itemData, out (int, int) gridPosition, out ItemRotation necessaryRotation, HashSet<(int,int)> excludedPositions )
+o Returns a Set of positions (Hashset<(int,int)>) if a position was found for the given item. Null if no space was found.
+* Also provides the necessary rotation and exact placement position needed to match the returned set of position.
+
+
+- IsAreaWithinGrid ( HashSet<(int, int)> gridPositions )
+o returns true if every given position exists within the grid. False otherwise. Doesn't check if the spaces are already occupied.
+
+
+- CountUniqueStacksInArea ( HashSet<(int, int)> gridPositions )
+o returns the number of different stacks detected in a given area. Even if 2 stacks hold the same item, the stacks are considered different.
+
+
+- ConvertSpacialDefIntoGridArea ( (int, int) selectedGridPosition, HashSet<(int, int)> spacialDefinition, (int, int) itemHandle )
+o returns a HashSet<(int,int)> of grid positions that the given item may occupy if placed to the grid at the given parameters. 
+*** Use this to fit items onto grids.
+
+
+- GetStackArea ( int x, int y )
+o returns every position of the detected stack if a stack exists at the given position. If no stack exists, returns an empty collection. NOT NULL.
+
+
+- GetStackValue ( int x, int y )
+o returns the amount of items at the detected stack's position if a stack exists a the given position. Othewise returns 0;
+
+
+- GetInvItemOnCell ( (int, int) index )
+o returns the InvItem that matches the stack at the given position, if one exists. Otherwise returns null.
+
+
+- GetStackItemData ( (int, int) index )
+o returns the ItemData that matches the stack at the given position, if one exists. Otherwise returns null.
+
+
+- GetCellObject ( (int, int) index )
+o returns the CellInteract at the given position, if one exists. Otherwise returns null.
+
+
+- DoesItemGraphicAlreadyExistOnGrid ( InvItem itemGraphic )
+o returns true if the given InvItem already exists for a stack on the grid. Useful if you're unsure if your InvItem is fresh/unique to your grid.
+
+
+- IsCellOccupied ( int x, int y )
+o returns true if the given position is holding an item. false othewise.
+
+
+- IsCellOnGrid ( (int, int) cell )
+o returns true if the given cell exists on the grid. false otherwise.
+
+
+- ContainerSize ()
+o returns a Vector2Int stating the grid's dimensions.
+
+
+- CellSize ()
+o returns a Vector2 stating the cell(s) dimensions.
+
+
+- StringifyPositions ( HashSet<(int, int)> positions )
+o returns a string representation of a set of positions. Very useful when logging stackAreas for debugging.
+*** This method is static: meaning you can use it from anywhere by calling InvGrid.StringifyPositions( [yourSet] )

@@ -1,0 +1,19 @@
+Overlaying Custom Images
+
+
+Generally speaking, if you want to add extra effects to your grids, you may.
+Just create your own container within the grid and be sure that container is
+included within the InvGrid's 'OtherContainers' list. The grid will be responsible 
+for resizing and maintaing your container after that.
+
+Then, if you want to apply graphics to specific cells, you can call the InvGrid's
+'OverlayRectTranformOntoGrid' method. It takes a graphic, your target container,
+the cell where you want your graphic to be centered, and whether or no you want the grapic
+to be scaled to the cell's size.
+
+Keep in mind, you'll be responsible for maintaining any graphics you choose to add. The grid
+won't be responsible for remembering your custom graphic(s)'s placements, so you'll need to do
+that yourself.
+
+Regardless, I'm open to questions regarding any feature or simply giving advice. Just reach out
+and I'll do my best to get back to you when I'm able.

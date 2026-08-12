@@ -52,3 +52,24 @@ and add everything to the grid. The method attempts to fill compatible stacks be
         help itself perform its job. Changing the smaller methods might have cause unintended ripple effects.
 
 
+For clarity, here is the structure of an ItemQuery. All you need to make a query is the specified itemData and the amount you desire.
+
+*****
+public struct ItemQuery
+{
+    public ItemData itemData;
+    public int placementAmount;
+
+    public ItemQuery(ItemData queryItem,int queryAmount)
+    {
+        itemData = queryItem;
+        placementAmount = queryAmount;
+    }
+}
+*****
+
+
+Also worth noting, if you spacefinding within very large grids, that'll also hurt your performance.
+The algorithm checks every cell at every rotation for each item you're querying. That adds up
+exponentially when searching through grids with hundreds of cells. So try to reserve your spacefinding
+for critical tasks only if you need to spacefind for Noticeably larger containers.

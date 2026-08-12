@@ -1165,7 +1165,7 @@ namespace dtsInventory
         /// </summary>
         /// <param name="index">The cell position of the invItem (sprite) you're looking for</param>
         /// <returns>The InvItem reference that is correlated to the given cell, or null if none exist</returns>
-        public InvItem GetItemGraphicOnCell(int x, int y)
+        public InvItem GetInvItemOnCell(int x, int y)
         {
             return GetInvItemOnCell((x, y));
         }

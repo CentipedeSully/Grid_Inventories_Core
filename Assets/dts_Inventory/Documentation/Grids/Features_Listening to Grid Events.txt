@@ -5,7 +5,11 @@ By default InvGrids have the following (publicly-accessible) internal events
  
  o OnContentsChanged
    - Happens when items are added/removed from the grid (if not suppressed).
-   > Provides the itemData affected, the amount that changed, and the specific operation [add/remove] as an 'InvContentsUpdate' struc.
+   > Provides the itemData affected, the amount that changed, the specific operation [add/remove] as an 'InvContentsUpdate' struc,
+   AND all positions that have been affected (as a list of stacks: List of Sets of (x,y) positions, where each set *was a stack).
+
+   *Don't assume the provided stacks still exist after the operation is performed. The event only tells that the stack existed and
+   was modified, not that it still exists.
  
  o OnBulkContentsChanged
    - Doesn't happen by default. Must be manually triggered. Useful if you want to trigger consecutive content changes
@@ -13,7 +17,7 @@ By default InvGrids have the following (publicly-accessible) internal events
    > Provides a list of individual 'InvContentsUpdate' structs; each one representing a successful operation made.
  
  o OnGridResized
-   - Happens when the grid gets resized.
+   - Happens when the grid gets resized (when not suppressed).
    > Provides the grid's new dimensions.
 
  o OnGridDestroyed
